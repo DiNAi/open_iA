@@ -18,7 +18,7 @@
 * Contact: FH O÷ Forschungs & Entwicklungs GmbH, Campus Wels, CT-Gruppe,              *
 *          Stelzhamerstraﬂe 23, 4600 Wels / Austria, Email:                           *
 * ************************************************************************************/
- 
+
 #ifndef IAHESSIANEIGENANALYSIS_H
 #define IAHESSIANEIGENANALYSIS_H
 
@@ -52,44 +52,85 @@
 #include "itkImageRegionIterator.h"
 #include <itkCastImageFilter.h>
 #include <itkSmartPointer.h>
+#include <itkCurvatureAnisotropicDiffusionImageFilter.h>
+#include <itkSobelEdgeDetectionImageFilter.h>
+#include "itkSigmoidImageFilter.h"
+#include "itkConfidenceConnectedImageFilter.h"
+#include "itkGeodesicActiveContourLevelSetImageFilter.h"
+#include "itkFastMarchingImageFilter.h"
+#include "itkHessianToObjectnessMeasureImageFilter.h"
+#include "itkMultiScaleHessianBasedMeasureImageFilter.h"
+#include <itkLocalStructureImageFilter.h>
+#include "itkDanielssonDistanceMapImageFilter.h"
+#include "itkConnectedComponentImageFilter.h"
+#include <itkFastChamferDistanceImageFilter.h>
+#include "itkExpNegativeImageFilter.h"
+#include "itkAtanImageFilter.h"
+#include "itkSinImageFilter.h"
+#include <itkZeroCrossingBasedEdgeDetectionImageFilter.h>
+#include "itkSimpleContourExtractorImageFilter.h"
+#include <itkLaplacianSharpeningImageFilter.h>
+#include <itkLaplacianRecursiveGaussianImageFilter.h>
+#include <itkHessianRecursiveGaussianImageFilter.h>
+#include "iAToolsITK.h"
+#include <itkLogImageFilter.h>
+#include <QDir>
+#include "itkComposeImageFilter.h"
+#include "itkVectorConfidenceConnectedImageFilter.h"
+#include <itkVectorConnectedComponentImageFilter.h>
+#include "itkWatershedImageFilter.h"
 
 
 /**
- * A implementation of the computation of the hessian matrix and eigenanalysis.
- * \remarks	Arikan, 18/04/2012. 
- */
+* A implementation of the computation of the hessian matrix and eigenanalysis.
+* \remarks	Arikan, 18/04/2012.
+*/
 
 class iAHessianEigenanalysis : public iAFilter
 {
 public:
-	iAHessianEigenanalysis( QString fn, FilterID fid, vtkImageData* i, vtkPolyData* p, iALogger* logger, QObject *parent = 0 );
+	iAHessianEigenanalysis(QString fn, FilterID fid, vtkImageData* i, vtkPolyData* p, iALogger* logger, QObject *parent = 0);
 	~iAHessianEigenanalysis();
 
 	/**
-	 * Sets iAHessianEigenanalysis parameters.
-	 * \param	sigma		Sigma value.
-	 * \param	hessian     Is hessian already computed.
-	 * \param	eigen		Which eigenvalue should computed.
-	 */
+	* Sets iAHessianEigenanalysis parameters.
+	* \param	sigma		Sigma value.
+	* \param	hessian     Is hessian already computed.
+	* \param	eigen		Which eigenvalue should computed.
+	*/
 
-	void setCParameters(double sigma, bool hessian, int eigen) { 
-		this->sigma = sigma; 
+	void setCParameters(double sigma, bool hessian, int eigen) {
+		this->sigma = sigma;
 		hessianComputed = hessian;
 		nr = eigen;
 	};
 
-	void setLapParameters(unsigned int sigma){
-		this->sigma = sigma; 
-	}; 
+	void setPath(QString path) {
+		this->filePath = path;
+		int pos = filePath.toStdString().find_last_of("\\/");
+		this->fileDir = filePath.toStdString().substr(0, pos);
+		this->fileName = filePath.toStdString().substr(filePath.toStdString().find_last_of("\\/")+1, filePath.toStdString().length() - pos - 5);
+		this->fileName = fileName = path.toStdString();
+		//cout << "Filedirectory: " << fileDir << endl;
+		//cout << "Filename: " << fileName << endl;
+	};
+
+	void setLapParameters(unsigned int sigma) {
+		this->sigma = sigma;
+	};
+
+	QString filePath;
+	std::string fileName;
+	std::string fileDir;
 
 protected:
 	void run();
-	
+
 	/** Computes hessian of given image */
-	void computeHessian( );
+	void computeHessian();
 
 	/** Computes laplacian of Gaussian (LoG) of given image. */
-	void computeLaplacian(); 
+	void computeLaplacian();
 
 private:
 	unsigned int sigma;

@@ -74,6 +74,7 @@ void iAHessianModuleInterface::computeHessianEigenanalysis( int nr )
 	m_mdiChild->addMsg( "----------" );
 	m_mdiChild->addMsg( m_mdiChild->currentFile() );
 	thread->setCParameters( chefSigma, m_mdiChild->isHessianComputed(), nr );
+	thread->setPath(m_mdiChild->currentFile());
 	thread->start();
 	m_mdiChild->setHessianComputed( true );
 	m_mainWnd->statusBar()->showMessage( filterName, 5000 );
