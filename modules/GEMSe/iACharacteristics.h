@@ -51,6 +51,10 @@ private:
 	int m_objectCount;
 	double m_duration;
 	double m_measures[MeasureCount];
+
+	double m_median_accuracy, m_mean_accuracy, m_dice_overall, m_dice_0, m_dice_1, m_dice_2, m_dice_3, m_dice_4;
+	double m_mean_uncertainty, m_median_uncertainty, m_uncertainty_0, m_uncertainty_1, m_uncertainty_2, m_uncertainty_3, m_uncertainty_4;
+	double m_median_confusion_uncertainy_false, m_median_confusion_uncertainy_true, m_median_confusion_bad_to_good;
 };
 
 class CharacteristicsCalculator : public QThread

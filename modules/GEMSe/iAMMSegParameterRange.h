@@ -75,6 +75,7 @@ public:
 	double svm_C_From, svm_C_To;                bool svm_C_logScale;
 	double svm_gamma_From, svm_gamma_To;		bool svm_gamma_logScale;
 	int svm_channels_From, svm_channels_To;
+	double svm_SeedProb_From, svm_SeedProb_To;
 
 	MinMaxPairs measureMinMax;
 

@@ -34,6 +34,19 @@
 #include "iASpectrumType.h"
 #include "SVMImageFilter.h"
 
+#include <random>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+#include <vtkImageAppend.h>
+#include <itkImageFileWriter.h>
+#include <itkImageDuplicator.h>
+#include <itkSaltAndPepperNoiseImageFilter.h>
+#include <itkConstantPadImageFilter.h>
+#include <itkMinimumMaximumImageCalculator.h>
+#include <itkConstNeighborhoodIterator.h>
+#include <itkNeighborhoodIterator.h>
+#include <itkLabelOverlapMeasuresImageFilter.h>
 
 class iAAttributes;
 class iAModalityList;
@@ -63,6 +76,7 @@ public:
 	virtual double estimatedTimeRemaining() const;
 	void Abort();
 	bool IsAborted();
+	SVMImageFilter::SeedsPointer MethodForSelectingSeeds(QString pathToPool, float percentageSeeds);
 signals:
 	void Progress(int);
 	void Status(QString const &);

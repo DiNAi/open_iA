@@ -23,6 +23,10 @@
 #define DLG_GEMSECONTROL_H
 
 #include "ui_GEMSeControl.h"
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QSettings>
+#include <QDir>
 
 #include <iAQTtoUIConnector.h>
 typedef iAQTtoUIConnector<QDockWidget, Ui_GEMSeControl>   dlg_GEMSeControlUI;
@@ -40,6 +44,22 @@ class dlg_GEMSe;
 class iASamplingResults;
 
 #include <vtkSmartPointer.h>
+
+#include <random>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+#include <vtkImageAppend.h>
+#include <itkImageFileWriter.h>
+#include <itkImageDuplicator.h>
+#include <itkSaltAndPepperNoiseImageFilter.h>
+#include <itkConstantPadImageFilter.h>
+#include <itkMinimumMaximumImageCalculator.h>
+#include <itkConstNeighborhoodIterator.h>
+#include <itkNeighborhoodIterator.h>
+#include <itkLabelOverlapMeasuresImageFilter.h>
+
+#include "SVMImageFilter.h"
 
 class vtkImageData;
 
@@ -59,6 +79,7 @@ public:
 	void ExportAttributeRangeRanking();
 	void ExportRankings();
 	void ImportRankings();
+	
 public slots:
 	void ExportIDs();
 private slots:

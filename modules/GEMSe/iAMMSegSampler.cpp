@@ -40,6 +40,26 @@
 
 #include <QMap>
 #include <QTextStream>
+#include <QDir>
+
+void listFiles(QDir directory, QString indent, std::vector<std::string> &allMHAs)
+{
+	indent += "\t";
+	QDir dir(directory);
+	QFileInfoList list = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+	std::string partFilename = std::string(".OT.");
+	std::string partMHA = std::string(".mha");
+	foreach(QFileInfo finfo, list) {
+		std::string fullFilename = std::string(finfo.fileName().toStdString());
+		if (fullFilename.find(partFilename) != std::string::npos && fullFilename.find(partMHA) != std::string::npos) {
+			//cout << finfo.absoluteFilePath().toStdString() << endl;
+			allMHAs.push_back(finfo.canonicalFilePath().toStdString());
+		}
+		if (finfo.isDir()) {
+			listFiles(QDir(finfo.absoluteFilePath()), indent, allMHAs);
+		}
+	}
+}
 
 const int CONCURRENT_ERW_RUNS = 1;
 
@@ -117,6 +137,10 @@ void iAMMSegSampler::run()
 			.arg(m_range->svm_gamma_From)
 			.arg(m_range->svm_gamma_To)
 			.arg(m_range->svm_gamma_logScale ? "Logarithmic" : "Linear");
+	descriptor += QString("SVM Seed Set Probability	Parameter	Continuous	%1	%2	%3\n")
+		.arg(m_range->svm_SeedProb_From)
+		.arg(m_range->svm_SeedProb_To)
+		.arg("Linear");
 	descriptor += QString("SVM Channels	Parameter	Discrete	%1	%2	%3\n")
 			.arg(m_range->svm_channels_From)
 			.arg(m_range->svm_channels_To)
@@ -301,6 +325,7 @@ void iAMMSegSampler::erwFinished()
 			case erwMaxIter: value = param->erw_maxIter(); break;
 			case svmC: value = param->svm_c(); break;
 			case svmGamma: value = param->svm_gamma(); break;
+			case svmSeedProb: value = param->svm_seedprob(); break;
 			case svmChannelCount: value = param->svm_channels(); break;
 		}
 		result->SetAttribute(i, value);
@@ -431,4 +456,182 @@ void iAMMSegSampler::Abort()
 bool iAMMSegSampler::IsAborted()
 {
 	return m_aborted;
+}
+
+SVMImageFilter::SeedsPointer iAMMSegSampler::MethodForSelectingSeeds(QString pathToPool, float percentageSeeds) {
+	SVMImageFilter::SeedsPointer seeds(new SVMImageFilter::SeedsType);
+	std::vector<std::string> allMHAs;
+	typedef itk::Image< double, 3 > InputImageType;
+
+	{
+		QDir dir(pathToPool);
+		listFiles(dir, "", allMHAs);
+	}
+
+	cout << "nr of mhas: " << allMHAs.size() << endl;
+
+	/* code snippet to select seeds */
+	{
+		for (std::vector<std::string>::iterator it = allMHAs.begin(); it != allMHAs.end(); ++it) {
+			InputImageType::Pointer otImage = NULL;
+
+			std::string curStr = *it;
+
+			typedef itk::ImageFileReader< InputImageType > OTReaderType;
+			OTReaderType::Pointer otreader = OTReaderType::New();
+			otreader->SetFileName(curStr.c_str());
+			otreader->Update();
+			otreader->ReleaseDataFlagOn();
+
+			otImage = otreader->GetOutput();
+
+			/* Define seed points */
+
+			typedef itk::ImageDuplicator< InputImageType > DuplicatorType;
+			DuplicatorType::Pointer duplicator = DuplicatorType::New();
+			duplicator->SetInputImage(otImage);
+			duplicator->Update();
+			InputImageType::Pointer clonedImage = duplicator->GetOutput();
+
+			bool safe = false;
+			float curProb = percentageSeeds / 100;
+			std::string seedpathStr;
+
+			/* Count number of voxel for every label */
+			int counter[5] = { 0 };
+			itk::ImageRegionConstIterator<InputImageType> imageIterator(clonedImage, clonedImage->GetLargestPossibleRegion());
+			imageIterator.GoToBegin();
+			while (!imageIterator.IsAtEnd()) {
+				int val = imageIterator.Get();
+				counter[val]++; ++imageIterator;
+			}
+
+			while (!safe) {
+				typedef itk::SaltAndPepperNoiseImageFilter < InputImageType, InputImageType > SaltPepperFilterType;
+				SaltPepperFilterType::Pointer saltpepper = SaltPepperFilterType::New();
+				curProb += 0.00000001;
+				saltpepper->SetProbability(curProb);
+				saltpepper->SetInput(otImage);
+				saltpepper->Update();
+
+				std::size_t found = curStr.find_last_of("//");
+				found = curStr.substr(0, found).find_last_of("//");
+				std::string pathStr(curStr.substr(0, found).substr(0, found));
+				seedpathStr = pathStr + "/seeds.seed";
+
+				std::vector<std::vector<int>> labels[5];
+
+				itk::ImageRegionConstIterator<InputImageType> imageIterator2(saltpepper->GetOutput(), saltpepper->GetOutput()->GetLargestPossibleRegion());
+
+				imageIterator.GoToBegin();
+				imageIterator2.GoToBegin();
+
+				while (!imageIterator.IsAtEnd())
+				{
+					std::vector<int> pos;
+					// Get the value of the current pixel
+					int val = imageIterator.Get();
+					int val2 = imageIterator2.Get();
+					if (val != val2) {
+						pos.push_back(imageIterator.GetIndex()[0]); pos.push_back(imageIterator.GetIndex()[1]); pos.push_back(imageIterator.GetIndex()[2]);
+						if (val == 0) { labels[0].push_back(pos); }
+						else if (val == 1) { labels[1].push_back(pos); }
+						else if (val == 2) { labels[2].push_back(pos); }
+						else if (val == 3) { labels[3].push_back(pos); }
+						else if (val == 4) { labels[4].push_back(pos); }
+					}
+					++imageIterator;
+					++imageIterator2;
+				}
+
+				cout << "Prob: " << curProb << "-";
+				float percentages[5];
+				for (int i = 0; i < 5; i++) { percentages[i] = float(labels[i].size()) / (float(counter[i]) / 100); cout << percentages[i] << ","; }
+				cout << endl;
+
+				//if (percentages[0] > 75 && percentages[1] > 75 && percentages[2] > 75 && percentages[3] > 75 && percentages[4] > 75){
+				if (labels[0].size() > 0 && labels[1].size() > 0 && labels[2].size() > 0 && labels[3].size() > 0 && labels[4].size() > 0) {
+					safe = true;
+
+					ofstream myfile;
+					myfile.open(seedpathStr);
+					myfile << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
+					myfile << "<Labels>" << endl;
+					myfile << "\t<Label id=\"0\" name =\"0\">" << endl;
+
+					QList<iAImageCoordinate> result0;
+					for (std::vector<std::vector<int>>::iterator labelit = labels[0].begin(); labelit != labels[0].end(); ++labelit) {
+						myfile << "\t\t<Seed x=\"" << (*labelit)[0] << "\" y=\"" << (*labelit)[1] << "\" z=\"" << (*labelit)[2] << "\"/>" << endl;
+						iAImageCoordinate coord;
+						coord.x = (*labelit)[0];
+						coord.y = (*labelit)[1];
+						coord.z = (*labelit)[2];
+						result0.append(coord);
+					}
+					myfile << "\t</Label>" << endl;
+					myfile << "\t<Label id=\"1\" name =\"1\">" << endl;
+					QList<iAImageCoordinate> result1;
+					for (std::vector<std::vector<int>>::iterator labelit = labels[1].begin(); labelit != labels[1].end(); ++labelit) {
+						myfile << "\t\t<Seed x=\"" << (*labelit)[0] << "\" y=\"" << (*labelit)[1] << "\" z=\"" << (*labelit)[2] << "\"/>" << endl;
+						iAImageCoordinate coord;
+						coord.x = (*labelit)[0];
+						coord.y = (*labelit)[1];
+						coord.z = (*labelit)[2];
+						result1.append(coord);
+					}
+					myfile << "\t</Label>" << endl;
+					myfile << "\t<Label id=\"2\" name =\"2\">" << endl;
+
+					QList<iAImageCoordinate> result2;
+					for (std::vector<std::vector<int>>::iterator labelit = labels[2].begin(); labelit != labels[2].end(); ++labelit) {
+						myfile << "\t\t<Seed x=\"" << (*labelit)[0] << "\" y=\"" << (*labelit)[1] << "\" z=\"" << (*labelit)[2] << "\"/>" << endl;
+						iAImageCoordinate coord;
+						coord.x = (*labelit)[0];
+						coord.y = (*labelit)[1];
+						coord.z = (*labelit)[2];
+						result2.append(coord);
+					}
+					myfile << "\t</Label>" << endl;
+					myfile << "\t<Label id=\"3\" name =\"3\">" << endl;
+
+					QList<iAImageCoordinate> result3;
+					for (std::vector<std::vector<int>>::iterator labelit = labels[3].begin(); labelit != labels[3].end(); ++labelit) {
+						myfile << "\t\t<Seed x=\"" << (*labelit)[0] << "\" y=\"" << (*labelit)[1] << "\" z=\"" << (*labelit)[2] << "\"/>" << endl;
+						iAImageCoordinate coord;
+						coord.x = (*labelit)[0];
+						coord.y = (*labelit)[1];
+						coord.z = (*labelit)[2];
+						result3.append(coord);
+					}
+					myfile << "\t</Label>" << endl;
+					myfile << "\t<Label id=\"4\" name =\"4\">" << endl;
+
+					QList<iAImageCoordinate> result4;
+					for (std::vector<std::vector<int>>::iterator labelit = labels[4].begin(); labelit != labels[4].end(); ++labelit) {
+						myfile << "\t\t<Seed x=\"" << (*labelit)[0] << "\" y=\"" << (*labelit)[1] << "\" z=\"" << (*labelit)[2] << "\"/>" << endl;
+
+						iAImageCoordinate coord;
+						coord.x = (*labelit)[0];
+						coord.y = (*labelit)[1];
+						coord.z = (*labelit)[2];
+						result4.append(coord);
+					}
+					myfile << "\t</Label>" << endl;
+					myfile << "</Labels>" << endl;
+					cout << "Next ...." << endl;
+					myfile.close();
+
+					seeds->push_back(result0);
+					seeds->push_back(result1);
+					seeds->push_back(result2);
+					seeds->push_back(result3);
+					seeds->push_back(result4);
+				}
+			}
+
+			cout << "Seed file: " << seedpathStr << " Prob: " << curProb << endl;
+		}
+	}
+
+	return seeds;
 }

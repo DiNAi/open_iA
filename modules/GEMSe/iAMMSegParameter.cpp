@@ -37,13 +37,14 @@ iAMMSegParameter::iAMMSegParameter(QSharedPointer<iAMMSegParameterRange> range) 
 	m_parameterRanges(range),
 	m_svm_c(0),
 	m_svm_gamma(0),
+	m_svm_seedprob(0),
 	m_svm_channels(0)
 {
 }
 
 iAMMSegParameter::iAMMSegParameter(double erw_beta, double erw_gamma, int erw_maxIter,
 	QVector<iAMMSegModalityParameter> modalityParams,
-	double svm_c, double svm_gamma, int svm_channels,
+	double svm_c, double svm_gamma, double svm_seedprob, int svm_channels,
 	QSharedPointer<iAMMSegParameterRange> range)
 :
 	m_id(-1),
@@ -54,6 +55,7 @@ iAMMSegParameter::iAMMSegParameter(double erw_beta, double erw_gamma, int erw_ma
 	m_parameterRanges(range),
 	m_svm_c(svm_c),
 	m_svm_gamma(svm_gamma),
+	m_svm_seedprob(svm_seedprob),
 	m_svm_channels(svm_channels)
 {}
 
@@ -67,6 +69,7 @@ QString iAMMSegParameter::GetDescriptor() const
 		QString::number(erw_maxIter())+SEPARATOR+
 		QString::number(svm_c())+SEPARATOR+
 		QString::number(svm_gamma())+SEPARATOR+
+		QString::number(svm_seedprob()) + SEPARATOR +
 		QString::number(svm_channels());
 	for (int i=0; i<m_modalityParams.size(); ++i)
 	{
@@ -100,6 +103,7 @@ QSharedPointer<iAMMSegParameter> iAMMSegParameter::Create(QString const & descri
 	double erw_maxIter = tokens[cur++].toInt(&ok);       if (!ok) { DEBUG_LOG("Invalid ERW maximum iterations!\n");  return QSharedPointer<iAMMSegParameter>(); }
 	double svm_C = tokens[cur++].toDouble(&ok);          if (!ok) { DEBUG_LOG("Invalid SVM C!\n");  return QSharedPointer<iAMMSegParameter>(); }
 	double svm_gamma = tokens[cur++].toDouble(&ok);      if (!ok) { DEBUG_LOG("Invalid SVM gamma!\n");  return QSharedPointer<iAMMSegParameter>(); }
+	double svm_seedprob = tokens[cur++].toDouble(&ok);   if (!ok) { DEBUG_LOG("Invalid SVM seed probability!\n");  return QSharedPointer<iAMMSegParameter>(); }
 	double svm_channels = tokens[cur++].toInt(&ok);      if (!ok) { DEBUG_LOG("Invalid SVM channels!\n");  return QSharedPointer<iAMMSegParameter>(); }
 
 	QVector<iAMMSegModalityParameter> modParams;
@@ -120,7 +124,7 @@ QSharedPointer<iAMMSegParameter> iAMMSegParameter::Create(QString const & descri
 	QSharedPointer<iAMMSegParameter> result(new iAMMSegParameter(
 		erw_beta, erw_gamma, erw_maxIter,
 		modParams,
-		svm_C, svm_gamma, svm_channels,
+		svm_C, svm_gamma, svm_seedprob, svm_channels,
 		paramRange));
 	result->setID(id);
 	return result;
@@ -159,6 +163,10 @@ double iAMMSegParameter::svm_gamma() const
 {
 	return m_svm_gamma;
 }
+double iAMMSegParameter::svm_seedprob() const
+{
+	return m_svm_seedprob;
+}
 int iAMMSegParameter::svm_channels() const
 {
 	return m_svm_channels;
@@ -195,6 +203,7 @@ void iAMMSegParameter::setParam(int paramIdx, double value)
 	case erwMaxIter:      m_erw_maxIter  = value; break;
 	case svmC:            m_svm_c        = value; break;
 	case svmGamma:        m_svm_gamma    = value; break;
+	case svmSeedProb:     m_svm_seedprob = value; break;
 	case svmChannelCount: m_svm_channels = value; break;
 	default: {
 		int modIdx = (paramIdx - NonModalityParamCount) / ModalityParamCount;

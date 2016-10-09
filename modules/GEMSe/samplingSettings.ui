@@ -21,10 +21,10 @@
      </property>
     </widget>
    </item>
-   <item row="15" column="3">
+   <item row="16" column="3">
     <widget class="QLineEdit" name="leGammaMax">
      <property name="text">
-      <string>100</string>
+      <string>10</string>
      </property>
     </widget>
    </item>
@@ -42,10 +42,10 @@
      </property>
     </widget>
    </item>
-   <item row="13" column="3">
+   <item row="14" column="3">
     <widget class="QLineEdit" name="leBetaMax">
      <property name="text">
-      <string>10000</string>
+      <string>1000</string>
      </property>
     </widget>
    </item>
@@ -128,7 +128,7 @@
       <number>10</number>
      </property>
      <property name="value">
-      <number>200</number>
+      <number>100</number>
      </property>
     </widget>
    </item>
@@ -142,10 +142,10 @@
      </property>
     </widget>
    </item>
-   <item row="15" column="2">
+   <item row="16" column="2">
     <widget class="QLineEdit" name="leGammaMin">
      <property name="text">
-      <string>0.5</string>
+      <string>1</string>
      </property>
     </widget>
    </item>
@@ -156,13 +156,10 @@
      </property>
     </widget>
    </item>
-   <item row="13" column="4">
+   <item row="14" column="4">
     <widget class="QCheckBox" name="cbBetaLogScale">
      <property name="text">
       <string>log scale</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -173,10 +170,10 @@
      </property>
     </widget>
    </item>
-   <item row="13" column="2">
+   <item row="14" column="2">
     <widget class="QLineEdit" name="leBetaMin">
      <property name="text">
-      <string>0.00001</string>
+      <string>0.1</string>
      </property>
     </widget>
    </item>
@@ -228,13 +225,10 @@
      </property>
     </widget>
    </item>
-   <item row="15" column="4">
+   <item row="16" column="4">
     <widget class="QCheckBox" name="cbGammaLogScale">
      <property name="text">
       <string>log scale</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -265,7 +259,7 @@
      </item>
     </widget>
    </item>
-   <item row="15" column="1">
+   <item row="16" column="1">
     <widget class="QLabel" name="lbERWGamma">
      <property name="text">
       <string>Gamma</string>
@@ -279,6 +273,27 @@
      </property>
     </widget>
    </item>
+   <item row="12" column="1">
+    <widget class="QLabel" name="lbSVMSeedSetProb">
+     <property name="text">
+      <string>Seed Probability Range</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="2">
+    <widget class="QLineEdit" name="leSVM_SeedSetProb_From">
+     <property name="text">
+      <string>0.01</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="3">
+    <widget class="QLineEdit" name="leSVM_SeedSetProb_To">
+     <property name="text">
+      <string>25</string>
+     </property>
+    </widget>
+   </item>
    <item row="4" column="2">
     <widget class="QLabel" name="lbEstimate">
      <property name="text">
@@ -289,7 +304,7 @@
      </property>
     </widget>
    </item>
-   <item row="13" column="1">
+   <item row="14" column="1">
     <widget class="QLabel" name="lbERWBeta">
      <property name="text">
       <string>Beta</string>
@@ -313,7 +328,7 @@
    <item row="11" column="2">
     <widget class="QLineEdit" name="leSVM_Channels_From">
      <property name="text">
-      <string>1</string>
+      <string>4</string>
      </property>
     </widget>
    </item>
@@ -341,7 +356,7 @@
      </property>
     </widget>
    </item>
-   <item row="12" column="0">
+   <item row="13" column="0">
     <widget class="QLabel" name="label_15">
      <property name="text">
       <string>Random Walker</string>
@@ -359,6 +374,9 @@
     <widget class="QCheckBox" name="cbStoreProbabilities">
      <property name="text">
       <string>Store Probabilities</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -413,28 +431,28 @@
      </layout>
     </widget>
    </item>
-   <item row="16" column="1">
+   <item row="17" column="1">
     <widget class="QLabel" name="lbERWMaxIter">
      <property name="text">
       <string>Max. Iterations</string>
      </property>
     </widget>
    </item>
-   <item row="16" column="2">
+   <item row="17" column="2">
     <widget class="QLineEdit" name="leMaxIterMin">
      <property name="text">
-      <string>100</string>
+      <string>10</string>
      </property>
     </widget>
    </item>
-   <item row="16" column="3">
+   <item row="17" column="3">
     <widget class="QLineEdit" name="leMaxIterMax">
      <property name="text">
-      <string>10000</string>
+      <string>1000</string>
      </property>
     </widget>
    </item>
-   <item row="16" column="4">
+   <item row="17" column="4">
     <widget class="QCheckBox" name="cbMaxIterLogScale">
      <property name="text">
       <string>log scale</string>
@@ -456,6 +474,8 @@
   <tabstop>cbSVM_Gamma_LogScale</tabstop>
   <tabstop>leSVM_Channels_From</tabstop>
   <tabstop>leSVM_Channels_To</tabstop>
+  <tabstop>leSVM_SeedSetProb_From</tabstop>
+  <tabstop>leSVM_SeedSetProb_To</tabstop>
   <tabstop>leBetaMin</tabstop>
   <tabstop>leBetaMax</tabstop>
   <tabstop>cbBetaLogScale</tabstop>

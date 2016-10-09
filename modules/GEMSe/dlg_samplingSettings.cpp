@@ -302,6 +302,10 @@ QSharedPointer<iAMMSegParameterRange> dlg_samplingSettings::GetRange()
 	result->svm_C_logScale = cbSVM_C_LogScale->isChecked();
 	result->svm_gamma_From = leSVM_gamma_From->text().toDouble();
 	result->svm_gamma_To = leSVM_gamma_To->text().toDouble();
+
+	result->svm_SeedProb_From = leSVM_SeedSetProb_From->text().toDouble();
+	result->svm_SeedProb_To = leSVM_SeedSetProb_To->text().toDouble();
+
 	result->svm_gamma_logScale = cbSVM_Gamma_LogScale->isChecked();
 	result->svm_channels_From = leSVM_Channels_From->text().toDouble();
 	result->svm_channels_To = leSVM_Channels_To->text().toDouble();

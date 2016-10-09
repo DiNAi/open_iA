@@ -35,7 +35,10 @@
 
 iACharacteristics::iACharacteristics():
 m_objectCount(0),
-m_duration(0.0)
+m_duration(0.0),
+m_median_accuracy(0.0), m_mean_accuracy(0.0), m_dice_overall(0.0), m_dice_0(0.0), m_dice_1(0.0), m_dice_2(0.0), m_dice_3(0.0), m_dice_4(0.0),
+m_mean_uncertainty(0.0), m_median_uncertainty(0.0), m_uncertainty_0(0.0), m_uncertainty_1(0.0), m_uncertainty_2(0.0), m_uncertainty_3(0.0), m_uncertainty_4(0.0),
+m_median_confusion_uncertainy_false(0.0), m_median_confusion_uncertainy_true(0.0), m_median_confusion_bad_to_good(0.0)
 {
 	std::fill(m_measures, m_measures+MeasureCount, 0.0);
 }

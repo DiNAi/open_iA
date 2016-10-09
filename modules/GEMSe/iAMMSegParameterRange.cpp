@@ -115,6 +115,7 @@ QSharedPointer<iAMMSegParameterRange> iAMMSegParameterRange::Create(QTextStream&
 		!readLine<int>(in, result->erw_maxIter_From, result->erw_maxIter_To) ||
 		!readLine<double>(in, result->svm_C_From, result->svm_C_To, &result->svm_C_logScale) ||
 		!readLine<double>(in, result->svm_gamma_From, result->svm_gamma_To, &result->svm_gamma_logScale) ||
+		!readLine<double>(in, result->svm_SeedProb_From, result->svm_SeedProb_To) ||
 		!readLine<int>(in, result->svm_channels_From, result->svm_channels_To) ||
 		!readLine<int>(in, result->objCountMin, result->objCountMax) ||
 		!readLine<double>(in, result->durationMin, result->durationMax))
@@ -160,6 +161,7 @@ bool iAMMSegParameterRange::Store(QTextStream& out)
 	out << "SVM_C" << Output::NameSeparator << svm_C_From << Output::ValueSeparator << svm_C_To << Output::OptionalParamSeparator << (svm_C_logScale ? "log" : "lin") << endl;
 	out << "SVM_Gamma" << Output::NameSeparator << svm_gamma_From << Output::ValueSeparator << svm_gamma_To << Output::OptionalParamSeparator << (svm_gamma_logScale ? "log" : "lin") << endl;
 	out << "SVM_Channels" << Output::NameSeparator << svm_channels_From << Output::ValueSeparator << svm_channels_To << endl;
+	out << "SVM_SeedSetProb" << Output::NameSeparator << svm_SeedProb_From << Output::ValueSeparator << svm_SeedProb_To << endl;
 	out << "ObjectCount" << Output::NameSeparator << objCountMin << Output::ValueSeparator << objCountMax << endl;
 	out << "Duration" << Output::NameSeparator << durationMin << Output::ValueSeparator << durationMax << endl;
 	for (int i=0; i<modalityParamRange.size(); ++i)
@@ -182,6 +184,7 @@ bool iAMMSegParameterRange::CoversWholeRange(AttributeID id, double min, double 
 			case erwMaxIter:      return min <= erw_maxIter_From && erw_maxIter_From <= max;
 			case svmC:            return min <= svm_C_From && svm_C_To <= max;
 			case svmGamma:        return min <= svm_gamma_From && svm_gamma_To <= max;
+			case svmSeedProb:     return min <= svm_SeedProb_From && svm_SeedProb_To <= max;
 			case svmChannelCount: return min <= svm_channels_From && svm_channels_To <= max;
 		}
 	}
@@ -225,6 +228,7 @@ bool iAMMSegParameterRange::IsLogScale(AttributeID id) const
 			case erwMaxIter:      return erw_maxIter_logScale;
 			case svmC:            return svm_C_logScale;
 			case svmGamma:        return svm_gamma_logScale;
+			case svmSeedProb:	  return false;
 			case svmChannelCount: return false;
 		}
 	}
@@ -251,6 +255,7 @@ double iAMMSegParameterRange::GetMin(AttributeID id) const
 			case erwMaxIter:      return erw_maxIter_From;
 			case svmC:            return svm_C_From;
 			case svmGamma:        return svm_gamma_From;
+			case svmSeedProb:	  return svm_SeedProb_From;
 			case svmChannelCount: return svm_channels_From;
 		}
 	}
@@ -293,6 +298,7 @@ double iAMMSegParameterRange::GetMax(AttributeID id) const
 			case erwMaxIter:      return erw_maxIter_To;
 			case svmC:            return svm_C_To;
 			case svmGamma:        return svm_gamma_To;
+			case svmSeedProb:     return svm_SeedProb_To;
 			case svmChannelCount: return svm_channels_To;
 		}
 	}
@@ -334,6 +340,7 @@ iAValueType iAMMSegParameterRange::GetRangeType(AttributeID id) const
 			case erwBeta:
 			case erwGamma:        return Continuous;
 			case erwMaxIter:      return Discrete;
+			case svmSeedProb:
 			case svmC:
 			case svmGamma:        return Continuous;
 			case svmChannelCount: return Discrete;
@@ -377,6 +384,7 @@ QString iAMMSegParameterRange::GetName(AttributeID id) const
 			case erwMaxIter:      return "ERW Max. It.";
 			case svmC:            return "SVM C";
 			case svmGamma:        return "SVM Gamma";
+			case svmSeedProb:	  return "SVM Seed Probability";
 			case svmChannelCount: return "SVM Channel #";
 		}
 	}

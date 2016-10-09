@@ -121,6 +121,7 @@ enum ERWParams
 	erwMaxIter,
 	svmC,
 	svmGamma,
+	svmSeedProb,
 	svmChannelCount,
 	NonModalityParamCount
 };
@@ -133,7 +134,7 @@ enum ModalityParams
 	ModalityParamCount
 };
 
-const int MeasureCount = 5;
+const int MeasureCount = 23;
 
 enum DerivedOutput
 {
