@@ -169,7 +169,25 @@ void iAMMSegSampler::run()
 			.arg(distFuncStr);
 	}
 	descriptor += QString("Object Count	Derived Output	Discrete	10000000000	1\n"
-		"Duration	Derived Output	Continuous	10000000000	0\n");
+		"Duration	Derived Output	Continuous	10000000000	0\n"
+		"Median Accuracy	Derived Output	Continuous	0	1\n"
+		"Mean Accuracy	Derived Output	Continuous	0	1\n"
+		"Dice Overall	Derived Output	Continuous	0	1\n"
+		"Dice 0	Derived Output	Continuous	0	1\n"
+		"Dice 1	Derived Output	Continuous	0	1\n"
+		"Dice 2	Derived Output	Continuous	0	1\n"
+		"Dice 3	Derived Output	Continuous	0	1\n"
+		"Dice 4	Derived Output	Continuous	0	1\n"
+		"Median Uncertainty	Derived Output	Continuous	0	1\n"
+		"Mean Uncertainty	Derived Output	Continuous	0	1\n"
+		"Uncertainty 0	Derived Output	Continuous	0	1\n"
+		"Uncertainty 1	Derived Output	Continuous	0	1\n"
+		"Uncertainty 2	Derived Output	Continuous	0	1\n"
+		"Uncertainty 3	Derived Output	Continuous	0	1\n"
+		"Uncertainty 4	Derived Output	Continuous	0	1\n"
+		"Median Confusion Uncertainty False	Derived Output	Continuous	0	1\n"
+		"Median Confusion Uncertainty True	Derived Output	Continuous	0	1\n"
+		"Median Confusion Bad Good	Derived Output	Continuous	0	1\n");
 
 	QTextStream textStream(&descriptor);
 

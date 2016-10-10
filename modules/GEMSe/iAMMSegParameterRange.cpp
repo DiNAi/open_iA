@@ -118,7 +118,25 @@ QSharedPointer<iAMMSegParameterRange> iAMMSegParameterRange::Create(QTextStream&
 		!readLine<double>(in, result->svm_SeedProb_From, result->svm_SeedProb_To) ||
 		!readLine<int>(in, result->svm_channels_From, result->svm_channels_To) ||
 		!readLine<int>(in, result->objCountMin, result->objCountMax) ||
-		!readLine<double>(in, result->durationMin, result->durationMax))
+		!readLine<double>(in, result->durationMin, result->durationMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax) ||
+		!readLine<double>(in, result->diceMin, result->diceMax))
 	{
 		DEBUG_LOG("Invalid Parameter Range text format!\n");
 		return QSharedPointer<iAMMSegParameterRange>();
@@ -164,6 +182,28 @@ bool iAMMSegParameterRange::Store(QTextStream& out)
 	out << "SVM_SeedSetProb" << Output::NameSeparator << svm_SeedProb_From << Output::ValueSeparator << svm_SeedProb_To << endl;
 	out << "ObjectCount" << Output::NameSeparator << objCountMin << Output::ValueSeparator << objCountMax << endl;
 	out << "Duration" << Output::NameSeparator << durationMin << Output::ValueSeparator << durationMax << endl;
+
+	out << "MedianAccuracy" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "MeanAccuracy" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "DiceOverall" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Dice0" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Dice1" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Dice2" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Dice3" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Dice4" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "MedianUncertainty" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "MeanUncertainty" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Uncertainty0" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Uncertainty1" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Uncertainty2" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Uncertainty3" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "Uncertainty4" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "MedianConfusionUncertaintyFalse" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "MedianConfusionUncertaintyTrue" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+	out << "MedianConfusionBadGood" << Output::NameSeparator << diceMin << Output::ValueSeparator << diceMax << endl;
+
+
+
 	for (int i=0; i<modalityParamRange.size(); ++i)
 	{
 		out << "Weight" << Output::NameSeparator << modalityParamRange[i].weightFrom << Output::ValueSeparator << modalityParamRange[i].weightTo << Output::OptionalParamSeparator << (weightLogScale?"log": "lin") << endl;
@@ -206,6 +246,24 @@ bool iAMMSegParameterRange::CoversWholeRange(AttributeID id, double min, double 
 		{
 			case objectCount:     return min <= objCountMin && objCountMax <= max;
 			case duration:        return min <= durationMin && durationMax <= max;
+			case medianAcc:       return min <= diceMin && diceMax <= max;
+			case meanAcc:         return min <= diceMin && diceMax <= max;
+			case diceOverall:     return min <= diceMin && diceMax <= max;
+			case dice0:           return min <= diceMin && diceMax <= max;
+			case dice1:           return min <= diceMin && diceMax <= max;
+			case dice2:           return min <= diceMin && diceMax <= max;
+			case dice3:           return min <= diceMin && diceMax <= max;
+			case dice4:           return min <= diceMin && diceMax <= max;
+			case medianUncertainty:     return min <= diceMin && diceMax <= max;
+			case meanUncertainty:       return min <= diceMin && diceMax <= max;
+			case uncertainty0:          return min <= diceMin && diceMax <= max;
+			case uncertainty1:          return min <= diceMin && diceMax <= max;
+			case uncertainty2:          return min <= diceMin && diceMax <= max;
+			case uncertainty3:          return min <= diceMin && diceMax <= max;
+			case uncertainty4:          return min <= diceMin && diceMax <= max;
+			case median_confusion_uncertainty_false:        return min <= diceMin && diceMax <= max;
+			case median_confusion_uncertainty_true:         return min <= diceMin && diceMax <= max;
+			case m_median_confusion_bad_to_good:            return min <= diceMin && diceMax <= max;
 			case diceMetric:
 			case kappa:
 			case overallAcc:
@@ -277,6 +335,24 @@ double iAMMSegParameterRange::GetMin(AttributeID id) const
 		{
 			case objectCount:     return objCountMin;
 			case duration:        return durationMin;
+			case medianAcc:             return diceMin;
+			case meanAcc:               return diceMin;
+			case diceOverall:           return diceMin;
+			case dice0:                 return diceMin;
+			case dice1:                 return diceMin;
+			case dice2:                 return diceMin;
+			case dice3:                 return diceMin;
+			case dice4:                 return diceMin;
+			case medianUncertainty:     return diceMin;
+			case meanUncertainty:       return diceMin;
+			case uncertainty0:          return diceMin;
+			case uncertainty1:          return diceMin;
+			case uncertainty2:          return diceMin;
+			case uncertainty3:          return diceMin;
+			case uncertainty4:          return diceMin;
+			case median_confusion_uncertainty_false:        return diceMin;
+			case median_confusion_uncertainty_true:         return diceMin;
+			case m_median_confusion_bad_to_good:            return diceMin;
 			case diceMetric:
 			case kappa:
 			case overallAcc:
@@ -320,6 +396,24 @@ double iAMMSegParameterRange::GetMax(AttributeID id) const
 		{
 			case objectCount:     return objCountMax;
 			case duration:        return durationMax;
+			case medianAcc:             return diceMax;
+			case meanAcc:               return diceMax;
+			case diceOverall:           return diceMax;
+			case dice0:                 return diceMax;
+			case dice1:                 return diceMax;
+			case dice2:                 return diceMax;
+			case dice3:                 return diceMax;
+			case dice4:                 return diceMax;
+			case medianUncertainty:     return diceMax;
+			case meanUncertainty:       return diceMax;
+			case uncertainty0:          return diceMax;
+			case uncertainty1:          return diceMax;
+			case uncertainty2:          return diceMax;
+			case uncertainty3:          return diceMax;
+			case uncertainty4:          return diceMax;
+			case median_confusion_uncertainty_false:        return diceMax;
+			case median_confusion_uncertainty_true:         return diceMax;
+			case m_median_confusion_bad_to_good:            return diceMax;
 			case diceMetric:
 			case kappa:
 			case overallAcc:
@@ -363,6 +457,24 @@ iAValueType iAMMSegParameterRange::GetRangeType(AttributeID id) const
 		{
 			case objectCount:     return Discrete;
 			case duration:        return Continuous;
+			case medianAcc:             return Continuous;
+			case meanAcc:               return Continuous;
+			case diceOverall:           return Continuous;
+			case dice0:                 return Continuous;
+			case dice1:                 return Continuous;
+			case dice2:                 return Continuous;
+			case dice3:                 return Continuous;
+			case dice4:                 return Continuous;
+			case medianUncertainty:     return Continuous;
+			case meanUncertainty:       return Continuous;
+			case uncertainty0:          return Continuous;
+			case uncertainty1:          return Continuous;
+			case uncertainty2:          return Continuous;
+			case uncertainty3:          return Continuous;
+			case uncertainty4:          return Continuous;
+			case median_confusion_uncertainty_false:        return Continuous;
+			case median_confusion_uncertainty_true:         return Continuous;
+			case m_median_confusion_bad_to_good:            return Continuous;
 			case diceMetric:
 			case kappa:
 			case overallAcc:
@@ -404,13 +516,31 @@ QString iAMMSegParameterRange::GetName(AttributeID id) const
 		int paramId = id - GetInputParameterCount();
 		switch (paramId)
 		{
-			case objectCount:     return "Object Count";
-		 	case duration:        return "Performance";
-			case diceMetric:      return "Mean Overlap (Dice)";
-			case kappa:			  return "Kappa Coefficient";
-			case overallAcc:	  return "Overall Accuracy";
-			case precision:		  return "Precision";
-			case recall:		  return "Recall";
+			case objectCount:           return "Object Count";
+		 	case duration:              return "Performance";
+		    case medianAcc:             return "Median Accuracy";
+		    case meanAcc:               return "Mean Accuracy";
+		    case diceOverall:           return "Dice Overall";
+		    case dice0:                 return "Dice 0";
+		    case dice1:                 return "Dice 1";
+		    case dice2:                 return "Dice 2";
+		    case dice3:                 return "Dice 3";
+		    case dice4:                 return "Dice 4";
+		    case medianUncertainty:     return "Median Uncertainty";
+		    case meanUncertainty:       return "Mean Uncertainty";
+		    case uncertainty0:          return "Uncertainty 0";
+		    case uncertainty1:          return "Uncertainty 1";
+		    case uncertainty2:          return "Uncertainty 2";
+		    case uncertainty3:          return "Uncertainty 3";
+		    case uncertainty4:          return "Uncertainty 4";
+		    case median_confusion_uncertainty_false:        return "Median Confusion Uncertainty False";
+		    case median_confusion_uncertainty_true:         return "Median Confusion Uncertainty True";
+		    case m_median_confusion_bad_to_good:            return "Median Confusion Bad Good";
+			case diceMetric:            return "Mean Overlap (Dice)";
+			case kappa:			            return "Kappa Coefficient";
+			case overallAcc:	          return "Overall Accuracy";
+			case precision:		          return "Precision";
+			case recall:		            return "Recall";
 		}
 	}
 	return "Unknown";

@@ -185,6 +185,7 @@ QSharedPointer<iAAttributeDescriptor> iAAttributeDescriptor::Create(QString cons
 	switch (result->GetValueType())
 	{
 		case Continuous:	// intentional fall-through!
+			result->m_logarithmic = false;
 		case Discrete:
 		{
 			bool minOk = true, maxOk = true;

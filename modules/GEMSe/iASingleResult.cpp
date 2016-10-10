@@ -79,6 +79,7 @@ QSharedPointer<iASingleResult> iASingleResult::Create(
 QString iASingleResult::ToString(QSharedPointer<iAAttributes> attributes, int type)
 {
 	QString result;
+	cout << "res: " << attributes->Get(35) << endl;
 	if (attributes->GetCount() != m_attributeValues.size())
 	{
 		DEBUG_LOG("Non-matching attribute list given (number of descriptors and number of values don't match\n");

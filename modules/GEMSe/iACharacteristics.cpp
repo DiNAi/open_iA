@@ -93,6 +93,25 @@ iACharacteristics iACharacteristics::Create(QString const & descriptor)
 	}
 	ok = true;
 	result.m_duration = (tokens.size() > 1) ? tokens[1].toDouble(&ok) : 0;
+	result.m_median_accuracy = (tokens.size() > 2) ? tokens[2].toDouble(&ok) : 0;
+	result.m_mean_accuracy = (tokens.size() > 3) ? tokens[3].toDouble(&ok) : 0;
+	result.m_dice_overall = (tokens.size() > 4) ? tokens[4].toDouble(&ok) : 0;
+	result.m_dice_0 = (tokens.size() > 5) ? tokens[5].toDouble(&ok) : 0;
+	result.m_dice_1 = (tokens.size() > 6) ? tokens[6].toDouble(&ok) : 0;
+	result.m_dice_2 = (tokens.size() > 7) ? tokens[7].toDouble(&ok) : 0;
+	result.m_dice_3 = (tokens.size() > 8) ? tokens[8].toDouble(&ok) : 0;
+	result.m_dice_4 = (tokens.size() > 9) ? tokens[9].toDouble(&ok) : 0;
+	result.m_mean_uncertainty = (tokens.size() > 10) ? tokens[10].toDouble(&ok) : 0;
+	result.m_median_uncertainty = (tokens.size() > 11) ? tokens[11].toDouble(&ok) : 0;
+	result.m_uncertainty_0 = (tokens.size() > 12) ? tokens[12].toDouble(&ok) : 0;
+	result.m_uncertainty_1 = (tokens.size() > 13) ? tokens[13].toDouble(&ok) : 0;
+	result.m_uncertainty_2 = (tokens.size() > 14) ? tokens[14].toDouble(&ok) : 0;
+	result.m_uncertainty_3 = (tokens.size() > 15) ? tokens[15].toDouble(&ok) : 0;
+	result.m_uncertainty_4 = (tokens.size() > 16) ? tokens[16].toDouble(&ok) : 0;
+	result.m_median_confusion_uncertainy_false = (tokens.size() > 17) ? tokens[17].toDouble(&ok) : 0;
+	result.m_median_confusion_uncertainy_true = (tokens.size() > 18) ? tokens[18].toDouble(&ok) : 0;
+	result.m_median_confusion_bad_to_good = (tokens.size() > 19) ? tokens[19].toDouble(&ok) : 0;
+
 	if (!ok)
 	{
 		DEBUG_LOG(QString("Characteristics:Invalid duration in line '%1'\n").arg(descriptor));
@@ -102,12 +121,16 @@ iACharacteristics iACharacteristics::Create(QString const & descriptor)
 		DEBUG_LOG(QString("Characteristics: Missing duration in line '%1'\n").arg(descriptor));
 		return result;
 	}
+
 	return result;
 }
 
 QString iACharacteristics::GetDescriptor() const
 {
-	return QString::number(m_objectCount) + " " + QString::number(m_duration);
+	return QString::number(m_objectCount) + " " + QString::number(m_duration) + " " + QString::number(m_median_accuracy) + " " + QString::number(m_mean_accuracy) + " " + QString::number(m_dice_overall) +
+		" " + QString::number(m_dice_0) + " " + QString::number(m_dice_1) + " " + QString::number(m_dice_2) + " " + QString::number(m_dice_3) + " " + QString::number(m_dice_4) +
+		" " + QString::number(m_mean_uncertainty) + " " + QString::number(m_median_uncertainty) + " " + QString::number(m_uncertainty_0) + " " + QString::number(m_uncertainty_1) + " " + QString::number(m_uncertainty_2) +
+		" " + QString::number(m_uncertainty_3) + " " + QString::number(m_uncertainty_4) + " " + QString::number(m_median_confusion_uncertainy_false) + " " + QString::number(m_median_confusion_uncertainy_true) + " " + QString::number(m_median_confusion_bad_to_good);
 }
 
 CharacteristicsCalculator::CharacteristicsCalculator(QSharedPointer<iASingleResult> result, QSharedPointer<iAAttributes> range, int objCountIdx):
@@ -138,6 +161,28 @@ void CharacteristicsCalculator::run()
 	relabel->Update();
 	int objCount = relabel->GetNumberOfObjects();
 	m_result->SetAttribute(m_objCountIdx, objCount);
+
+	srand(static_cast <unsigned> (time(0)));
+
+	m_result->SetAttribute(m_objCountIdx + 2,  ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 3,  ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 4,  ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 5,  ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 6,  ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 7,  ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 8,  ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 9,  ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 10, ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 11, ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 12, ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 13, ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 14, ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 15, ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 16, ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 17, ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 18, ((double)rand()/(double)RAND_MAX)); 
+	m_result->SetAttribute(m_objCountIdx + 19, ((double)rand()/(double)RAND_MAX)); 
+
 	/*
 	itk::ImageFileWriter<OutputImageType>::Pointer writer = itk::ImageFileWriter<OutputImageType>::New();
 	writer->SetFileName(debugCount.toStdString() );

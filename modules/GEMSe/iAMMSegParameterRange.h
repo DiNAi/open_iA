@@ -86,6 +86,7 @@ public:
 	*/
 	int objCountMin, objCountMax;
 	double durationMin, durationMax;
+	double diceMin, diceMax;
 	// TODO: move elsewhere?
 	long sampleCount;
 };

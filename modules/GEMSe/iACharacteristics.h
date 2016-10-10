@@ -24,6 +24,7 @@
 
 #include <QSharedPointer>
 #include <QThread>
+#include <time.h>
 
 #include "iAGEMSeConstants.h"
 

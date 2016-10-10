@@ -316,6 +316,8 @@ QSharedPointer<iAMMSegParameterRange> dlg_samplingSettings::GetRange()
 	result->objCountMax = std::numeric_limits<int>::lowest();
 	result->durationMin = std::numeric_limits<int>::max();
 	result->durationMax = std::numeric_limits<int>::lowest();
+	result->diceMin = 0.0;
+	result->diceMax = 1.0;
 	
 	for (int i=0; i<m_modalityControls.size(); ++i)
 	{
