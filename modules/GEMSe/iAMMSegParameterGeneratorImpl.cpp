@@ -130,6 +130,9 @@ ParameterListPointer iARandomParameterGenerator::GetParameterSets(QSharedPointer
 	QSharedPointer<RandomGenerator> svm_C_Rand(CreateRand(parameterRange->svm_C_logScale, parameterRange->svm_C_From, parameterRange->svm_C_To));
 	QSharedPointer<RandomGenerator> svm_Gamma_Rand(CreateRand(parameterRange->svm_gamma_logScale, parameterRange->svm_gamma_From, parameterRange->svm_gamma_To));
 	QSharedPointer<RandomGenerator> svm_SeedProb_Rand(CreateRand(false, parameterRange->svm_SeedProb_From, parameterRange->svm_SeedProb_To));
+	QSharedPointer<RandomGenerator> gadIter_Rand(CreateRand(false, parameterRange->gadIter_From, parameterRange->gadIter_To));
+	QSharedPointer<RandomGenerator> gadStep_Rand(CreateRand(false, parameterRange->gadStep_From, parameterRange->gadStep_To));
+	QSharedPointer<RandomGenerator> gadCond_Rand(CreateRand(false, parameterRange->gadCond_From, parameterRange->gadCond_To));
 	QVector<QSharedPointer<RandomGenerator> > weight_Rand;
 	for (int i=0; i<parameterRange->modalityParamRange.size(); ++i)
 	{
@@ -145,6 +148,9 @@ ParameterListPointer iARandomParameterGenerator::GetParameterSets(QSharedPointer
 		double svm_C = svm_C_Rand->next();
 		double svm_gamma = svm_Gamma_Rand->next();
 		double svm_seedprob = svm_SeedProb_Rand->next();
+		int gaditer = gadIter_Rand->next();
+		double gadstep = gadStep_Rand->next();
+		double gadcond = gadCond_Rand->next();
 		int svm_channels = intRand.next(parameterRange->svm_channels_To - parameterRange->svm_channels_From + 1) + parameterRange->svm_channels_From;
 
 		double weightSum = 0;
@@ -186,7 +192,7 @@ ParameterListPointer iARandomParameterGenerator::GetParameterSets(QSharedPointer
 
 		QSharedPointer<iAMMSegParameter> p(
 			new iAMMSegParameter(erw_beta, erw_gamma, erw_maxIter, modParams,
-			svm_C, svm_gamma, svm_seedprob, svm_channels,
+			svm_C, svm_gamma, svm_seedprob, gaditer, gadstep, gadcond, svm_channels,
 			parameterRange));
 		result->append(p);
 	}
@@ -318,6 +324,9 @@ ParameterListPointer iALatinHypercubeParameterGenerator::GetParameterSets(QShare
 	std::vector<double> svm_C_Values;
 	std::vector<double> svm_gamma_Values;
 	std::vector<double> svm_seedprob_Values;
+	std::vector<int>	gaditer_Values;
+	std::vector<double> gadstep_Values;
+	std::vector<double> gadcond_Values;
 	std::vector<int>    svm_channels_Values;
 	std::vector<std::map<int, double> > weightValues;
 	std::vector<std::map<int, int> > distanceIdxs;
@@ -327,6 +336,9 @@ ParameterListPointer iALatinHypercubeParameterGenerator::GetParameterSets(QShare
 	QSharedPointer<MyRange> erw_gamma_Range  = CreateRange(parameterRange->erw_gamma_logScale, parameterRange->erw_gamma_From, parameterRange->erw_gamma_To, count);
 	QSharedPointer<MyRange> svm_gamma_Range = CreateRange(parameterRange->svm_gamma_logScale, parameterRange->svm_gamma_From, parameterRange->svm_gamma_To, count);
 	QSharedPointer<MyRange> svm_seedprob_Range = CreateRange(false, parameterRange->svm_SeedProb_From, parameterRange->svm_SeedProb_To, count);
+	QSharedPointer<MyRange> gaditer_Range = CreateRange(false, parameterRange->gadIter_From, parameterRange->gadIter_To, count);
+	QSharedPointer<MyRange> gadstep_Range = CreateRange(false, parameterRange->gadStep_From, parameterRange->gadStep_To, count);
+	QSharedPointer<MyRange> gadcond_Range = CreateRange(false, parameterRange->gadCond_From, parameterRange->gadCond_To, count);
 	QSharedPointer<MyRange> svm_C_Range = CreateRange(parameterRange->svm_C_logScale, parameterRange->svm_C_From, parameterRange->svm_C_To, count);
 	
 	// "int" ranges: add +0.99999999 to "To" to give equal probability to that last value
@@ -347,6 +359,9 @@ ParameterListPointer iALatinHypercubeParameterGenerator::GetParameterSets(QShare
 		erw_gamma_Values.push_back(dblRand.next(erw_gamma_Range->min(i), erw_gamma_Range->max(i)));
 		svm_gamma_Values.push_back(dblRand.next(svm_gamma_Range->min(i), svm_gamma_Range->max(i)));
 		svm_seedprob_Values.push_back(dblRand.next(svm_seedprob_Range->min(i), svm_seedprob_Range->max(i)));
+		gaditer_Values.push_back(static_cast<int>(dblRand.next(gaditer_Range->min(i), gaditer_Range->max(i))));
+		gadstep_Values.push_back(dblRand.next(gadstep_Range->min(i), gadstep_Range->max(i)));
+		gadcond_Values.push_back(dblRand.next(gadcond_Range->min(i), gadcond_Range->max(i)));
 		svm_C_Values.push_back(dblRand.next(svm_C_Range->min(i), svm_C_Range->max(i)));
 		
 		erw_maxIter_Values.push_back(static_cast<int>(dblRand.next(erw_maxIter_Range->min(i), erw_maxIter_Range->max(i))));
@@ -427,6 +442,9 @@ ParameterListPointer iALatinHypercubeParameterGenerator::GetParameterSets(QShare
 		double svm_C        = pop_at(svm_C_Values, intRand.next(i));
 		double svm_gamma    = pop_at(svm_gamma_Values, intRand.next(i));
 		double svm_seedprob = pop_at(svm_seedprob_Values, intRand.next(i));
+		int gaditer = pop_at(gaditer_Values, intRand.next(i));
+		double gadstep = pop_at(gadstep_Values, intRand.next(i));
+		double gadcond = pop_at(gadcond_Values, intRand.next(i));
 		int    svm_channels = pop_at(svm_channels_Values, intRand.next(i));
 
 		/*
@@ -452,7 +470,7 @@ ParameterListPointer iALatinHypercubeParameterGenerator::GetParameterSets(QShare
 		QSharedPointer<iAMMSegParameter> p(new iAMMSegParameter(
 			erw_beta, erw_gamma, erw_maxIter,
 			modalityParams,
-			svm_C, svm_gamma, svm_seedprob, svm_channels,
+			svm_C, svm_gamma, svm_seedprob, gaditer, gadstep, gadcond, svm_channels,
 			parameterRange));
 		result->append(p);
 	}

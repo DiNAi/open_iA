@@ -160,6 +160,7 @@ void CharacteristicsCalculator::run()
 	//relabel->SetSortByObjectSize(false);
 	relabel->Update();
 	int objCount = relabel->GetNumberOfObjects();
+	cout << "m_objCountIdx: " << m_objCountIdx << endl;
 	m_result->SetAttribute(m_objCountIdx, objCount);
 
 	srand(static_cast <unsigned> (time(0)));

@@ -180,6 +180,9 @@ bool iAMMSegParameterRange::Store(QTextStream& out)
 	out << "SVM_Gamma" << Output::NameSeparator << svm_gamma_From << Output::ValueSeparator << svm_gamma_To << Output::OptionalParamSeparator << (svm_gamma_logScale ? "log" : "lin") << endl;
 	out << "SVM_Channels" << Output::NameSeparator << svm_channels_From << Output::ValueSeparator << svm_channels_To << endl;
 	out << "SVM_SeedSetProb" << Output::NameSeparator << svm_SeedProb_From << Output::ValueSeparator << svm_SeedProb_To << endl;
+	out << "GADIter" << Output::NameSeparator << gadIter_From << Output::ValueSeparator << gadIter_To << endl;
+	out << "GADStep" << Output::NameSeparator << gadStep_From << Output::ValueSeparator << gadStep_To << endl;
+	out << "GADCond" << Output::NameSeparator << gadCond_From << Output::ValueSeparator << gadCond_To << endl;
 	out << "ObjectCount" << Output::NameSeparator << objCountMin << Output::ValueSeparator << objCountMax << endl;
 	out << "Duration" << Output::NameSeparator << durationMin << Output::ValueSeparator << durationMax << endl;
 
@@ -225,6 +228,9 @@ bool iAMMSegParameterRange::CoversWholeRange(AttributeID id, double min, double 
 			case svmC:            return min <= svm_C_From && svm_C_To <= max;
 			case svmGamma:        return min <= svm_gamma_From && svm_gamma_To <= max;
 			case svmSeedProb:     return min <= svm_SeedProb_From && svm_SeedProb_To <= max;
+			case gadIter:     return min <= gadIter_From && gadIter_To <= max;
+			case gadStep:     return min <= gadStep_From && gadStep_To <= max;
+			case gadCond:     return min <= gadCond_From && gadCond_To <= max;
 			case svmChannelCount: return min <= svm_channels_From && svm_channels_To <= max;
 		}
 	}
@@ -287,6 +293,9 @@ bool iAMMSegParameterRange::IsLogScale(AttributeID id) const
 			case svmC:            return svm_C_logScale;
 			case svmGamma:        return svm_gamma_logScale;
 			case svmSeedProb:	  return false;
+			case gadIter:	  return false;
+			case gadStep:	  return false;
+			case gadCond:	  return false;
 			case svmChannelCount: return false;
 		}
 	}
@@ -314,6 +323,9 @@ double iAMMSegParameterRange::GetMin(AttributeID id) const
 			case svmC:            return svm_C_From;
 			case svmGamma:        return svm_gamma_From;
 			case svmSeedProb:	  return svm_SeedProb_From;
+			case gadIter:	  return gadIter_From;
+			case gadStep:	  return gadStep_From;
+			case gadCond:	  return gadCond_From;
 			case svmChannelCount: return svm_channels_From;
 		}
 	}
@@ -375,6 +387,9 @@ double iAMMSegParameterRange::GetMax(AttributeID id) const
 			case svmC:            return svm_C_To;
 			case svmGamma:        return svm_gamma_To;
 			case svmSeedProb:     return svm_SeedProb_To;
+			case gadIter:	  return gadIter_To;
+			case gadStep:	  return gadStep_To;
+			case gadCond:	  return gadCond_To;
 			case svmChannelCount: return svm_channels_To;
 		}
 	}
@@ -434,7 +449,10 @@ iAValueType iAMMSegParameterRange::GetRangeType(AttributeID id) const
 			case erwBeta:
 			case erwGamma:        return Continuous;
 			case erwMaxIter:      return Discrete;
-			case svmSeedProb:
+			case svmSeedProb:     return Continuous;
+			case gadIter:	        return Discrete;
+			case gadStep:	  
+			case gadCond:	  
 			case svmC:
 			case svmGamma:        return Continuous;
 			case svmChannelCount: return Discrete;
@@ -497,6 +515,9 @@ QString iAMMSegParameterRange::GetName(AttributeID id) const
 			case svmC:            return "SVM C";
 			case svmGamma:        return "SVM Gamma";
 			case svmSeedProb:	  return "SVM Seed Probability";
+			case gadIter:	  return "G Iter";
+			case gadStep:	  return "G Step";
+			case gadCond:	  return "G Cond";
 			case svmChannelCount: return "SVM Channel #";
 		}
 	}
@@ -518,24 +539,24 @@ QString iAMMSegParameterRange::GetName(AttributeID id) const
 		{
 			case objectCount:           return "Object Count";
 		 	case duration:              return "Performance";
-		    case medianAcc:             return "Median Accuracy";
-		    case meanAcc:               return "Mean Accuracy";
-		    case diceOverall:           return "Dice Overall";
-		    case dice0:                 return "Dice 0";
-		    case dice1:                 return "Dice 1";
-		    case dice2:                 return "Dice 2";
-		    case dice3:                 return "Dice 3";
-		    case dice4:                 return "Dice 4";
-		    case medianUncertainty:     return "Median Uncertainty";
-		    case meanUncertainty:       return "Mean Uncertainty";
-		    case uncertainty0:          return "Uncertainty 0";
-		    case uncertainty1:          return "Uncertainty 1";
-		    case uncertainty2:          return "Uncertainty 2";
-		    case uncertainty3:          return "Uncertainty 3";
-		    case uncertainty4:          return "Uncertainty 4";
-		    case median_confusion_uncertainty_false:        return "Median Confusion Uncertainty False";
-		    case median_confusion_uncertainty_true:         return "Median Confusion Uncertainty True";
-		    case m_median_confusion_bad_to_good:            return "Median Confusion Bad Good";
+		    case medianAcc:             return "MED A";
+		    case meanAcc:               return "M A";
+		    case diceOverall:           return "D";
+		    case dice0:                 return "D 0";
+		    case dice1:                 return "D 1";
+		    case dice2:                 return "D 2";
+		    case dice3:                 return "D 3";
+		    case dice4:                 return "D 4";
+		    case medianUncertainty:     return "MED U";
+		    case meanUncertainty:       return "m U";
+		    case uncertainty0:          return "U 0";
+		    case uncertainty1:          return "U 1";
+		    case uncertainty2:          return "U 2";
+		    case uncertainty3:          return "U 3";
+		    case uncertainty4:          return "U 4";
+		    case median_confusion_uncertainty_false:        return "MED C U F";
+		    case median_confusion_uncertainty_true:         return "MED C U T";
+		    case m_median_confusion_bad_to_good:            return "MED C B G";
 			case diceMetric:            return "Mean Overlap (Dice)";
 			case kappa:			            return "Kappa Coefficient";
 			case overallAcc:	          return "Overall Accuracy";

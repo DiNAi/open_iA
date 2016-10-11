@@ -122,6 +122,9 @@ enum ERWParams
 	svmC,
 	svmGamma,
 	svmSeedProb,
+	gadIter,
+	gadStep,
+	gadCond,
 	svmChannelCount,
 	NonModalityParamCount
 };
@@ -134,7 +137,7 @@ enum ModalityParams
 	ModalityParamCount
 };
 
-const int MeasureCount = 23;
+const int MeasureCount = 26;
 
 enum DerivedOutput
 {

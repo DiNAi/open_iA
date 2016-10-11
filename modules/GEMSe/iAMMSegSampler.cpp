@@ -141,6 +141,18 @@ void iAMMSegSampler::run()
 		.arg(m_range->svm_SeedProb_From)
 		.arg(m_range->svm_SeedProb_To)
 		.arg("Linear");
+	descriptor += QString("GAD Iter	Parameter	Discrete	%1	%2	%3\n")
+		.arg(m_range->gadIter_From)
+		.arg(m_range->gadIter_To)
+		.arg("Linear");
+	descriptor += QString("GAD Step	Parameter	Continuous	%1	%2	%3\n")
+		.arg(m_range->gadStep_From)
+		.arg(m_range->gadStep_To)
+		.arg("Linear");
+	descriptor += QString("GAD Conductance	Parameter	Continuous	%1	%2	%3\n")
+		.arg(m_range->gadCond_From)
+		.arg(m_range->gadCond_To)
+		.arg("Linear");
 	descriptor += QString("SVM Channels	Parameter	Discrete	%1	%2	%3\n")
 			.arg(m_range->svm_channels_From)
 			.arg(m_range->svm_channels_To)
@@ -170,24 +182,24 @@ void iAMMSegSampler::run()
 	}
 	descriptor += QString("Object Count	Derived Output	Discrete	10000000000	1\n"
 		"Duration	Derived Output	Continuous	10000000000	0\n"
-		"Median Accuracy	Derived Output	Continuous	0	1\n"
-		"Mean Accuracy	Derived Output	Continuous	0	1\n"
-		"Dice Overall	Derived Output	Continuous	0	1\n"
-		"Dice 0	Derived Output	Continuous	0	1\n"
-		"Dice 1	Derived Output	Continuous	0	1\n"
-		"Dice 2	Derived Output	Continuous	0	1\n"
-		"Dice 3	Derived Output	Continuous	0	1\n"
-		"Dice 4	Derived Output	Continuous	0	1\n"
-		"Median Uncertainty	Derived Output	Continuous	0	1\n"
-		"Mean Uncertainty	Derived Output	Continuous	0	1\n"
-		"Uncertainty 0	Derived Output	Continuous	0	1\n"
-		"Uncertainty 1	Derived Output	Continuous	0	1\n"
-		"Uncertainty 2	Derived Output	Continuous	0	1\n"
-		"Uncertainty 3	Derived Output	Continuous	0	1\n"
-		"Uncertainty 4	Derived Output	Continuous	0	1\n"
-		"Median Confusion Uncertainty False	Derived Output	Continuous	0	1\n"
-		"Median Confusion Uncertainty True	Derived Output	Continuous	0	1\n"
-		"Median Confusion Bad Good	Derived Output	Continuous	0	1\n");
+		"MED A	Derived Output	Continuous	0	1\n"
+		"M A	Derived Output	Continuous	0	1\n"
+		"D	Derived Output	Continuous	0	1\n"
+		"D 0	Derived Output	Continuous	0	1\n"
+		"D 1	Derived Output	Continuous	0	1\n"
+		"D 2	Derived Output	Continuous	0	1\n"
+		"D 3	Derived Output	Continuous	0	1\n"
+		"D 4	Derived Output	Continuous	0	1\n"
+		"MED U	Derived Output	Continuous	0	1\n"
+		"M U	Derived Output	Continuous	0	1\n"
+		"U 0	Derived Output	Continuous	0	1\n"
+		"U 1	Derived Output	Continuous	0	1\n"
+		"U 2	Derived Output	Continuous	0	1\n"
+		"U 3	Derived Output	Continuous	0	1\n"
+		"U 4	Derived Output	Continuous	0	1\n"
+		"MED C U F	Derived Output	Continuous	0	1\n"
+		"MED C U T	Derived Output	Continuous	0	1\n"
+		"MED C B G	Derived Output	Continuous	0	1\n");
 
 	QTextStream textStream(&descriptor);
 
@@ -344,6 +356,9 @@ void iAMMSegSampler::erwFinished()
 			case svmC: value = param->svm_c(); break;
 			case svmGamma: value = param->svm_gamma(); break;
 			case svmSeedProb: value = param->svm_seedprob(); break;
+			case gadIter: value = param->gaditer(); break;
+			case gadStep: value = param->gadstep(); break;
+			case gadCond: value = param->gadcond(); break;
 			case svmChannelCount: value = param->svm_channels(); break;
 		}
 		result->SetAttribute(i, value);

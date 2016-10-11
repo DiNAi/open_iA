@@ -43,7 +43,7 @@ public:
 	iAMMSegParameter(QSharedPointer<iAMMSegParameterRange> range);
 	iAMMSegParameter(double erw_beta, double erw_gamma, int erw_maxIter,
 		QVector<iAMMSegModalityParameter> modalityParams,
-		double svm_c, double svm_gamma, double svm_seedprob, int svm_channels,
+		double svm_c, double svm_gamma, double svm_seedprob, int gaditer, double gadstep, double gadcond, int svm_channels,
 		QSharedPointer<iAMMSegParameterRange> range);
 
 	static QSharedPointer<iAMMSegParameter> Create(QString const & Descriptor,
@@ -60,6 +60,9 @@ public:
 	double svm_c() const;
 	double svm_gamma() const;
 	double svm_seedprob() const;
+	int gaditer() const;
+	double gadstep() const;
+  double gadcond() const;
 	int svm_channels() const;
 	int pcaDim(int modalityIdx) const;
 	int distanceFuncIdx(int modalityIdx) const;
@@ -76,6 +79,9 @@ private:
 	double m_svm_c;
 	double m_svm_gamma;
 	double m_svm_seedprob;
+	int m_gadIter;
+	double m_gadStep;
+	double m_gadCond;
 	double m_svm_channels;
 	// for each channel:
 	QVector<iAMMSegModalityParameter> m_modalityParams;
