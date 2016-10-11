@@ -181,15 +181,15 @@ double iAMMSegParameter::svm_seedprob() const
 }
 int iAMMSegParameter::gaditer() const
 {
-	return gadIter;
+	return m_gadIter;
 }
 double iAMMSegParameter::gadstep() const
 {
-	return gadStep;
+	return m_gadStep;
 }
 double iAMMSegParameter::gadcond() const
 {
-	return gadCond;
+	return m_gadCond;
 }
 int iAMMSegParameter::svm_channels() const
 {

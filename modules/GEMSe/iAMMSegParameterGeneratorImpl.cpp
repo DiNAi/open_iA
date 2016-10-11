@@ -336,7 +336,7 @@ ParameterListPointer iALatinHypercubeParameterGenerator::GetParameterSets(QShare
 	QSharedPointer<MyRange> erw_gamma_Range  = CreateRange(parameterRange->erw_gamma_logScale, parameterRange->erw_gamma_From, parameterRange->erw_gamma_To, count);
 	QSharedPointer<MyRange> svm_gamma_Range = CreateRange(parameterRange->svm_gamma_logScale, parameterRange->svm_gamma_From, parameterRange->svm_gamma_To, count);
 	QSharedPointer<MyRange> svm_seedprob_Range = CreateRange(false, parameterRange->svm_SeedProb_From, parameterRange->svm_SeedProb_To, count);
-	QSharedPointer<MyRange> gaditer_Range = CreateRange(false, parameterRange->gadIter_From, parameterRange->gadIter_To, count);
+	QSharedPointer<MyRange> gaditer_Range = CreateRange(false, parameterRange->gadIter_From, parameterRange->gadIter_To + 0.99999999, count);
 	QSharedPointer<MyRange> gadstep_Range = CreateRange(false, parameterRange->gadStep_From, parameterRange->gadStep_To, count);
 	QSharedPointer<MyRange> gadcond_Range = CreateRange(false, parameterRange->gadCond_From, parameterRange->gadCond_To, count);
 	QSharedPointer<MyRange> svm_C_Range = CreateRange(parameterRange->svm_C_logScale, parameterRange->svm_C_From, parameterRange->svm_C_To, count);
