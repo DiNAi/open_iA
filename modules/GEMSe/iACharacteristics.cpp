@@ -33,6 +33,20 @@
 
 #include <QString>
 
+void sublistFiles1(QDir directory, QString indent, std::vector<std::string> &allMHAs)
+{
+	indent += "\t";
+	QDir dir(directory);
+	QFileInfoList list = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+	std::string partMHA = std::string(".mha");
+	foreach(QFileInfo finfo, list) {
+		std::string fullFilename = std::string(finfo.fileName().toStdString());
+		if (fullFilename.find(partMHA) != std::string::npos) {
+			allMHAs.push_back(finfo.canonicalFilePath().toStdString());
+		}
+	}
+}
+
 iACharacteristics::iACharacteristics():
 m_objectCount(0),
 m_duration(0.0),
@@ -165,24 +179,100 @@ void CharacteristicsCalculator::run()
 
 	srand(static_cast <unsigned> (time(0)));
 
-	m_result->SetAttribute(m_objCountIdx + 2,  ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 3,  ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 4,  ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 5,  ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 6,  ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 7,  ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 8,  ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 9,  ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 10, ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 11, ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 12, ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 13, ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 14, ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 15, ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 16, ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 17, ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 18, ((double)rand()/(double)RAND_MAX)); 
-	m_result->SetAttribute(m_objCountIdx + 19, ((double)rand()/(double)RAND_MAX)); 
+	cout << "GetFolder: " << m_result->GetFolder().toStdString() << endl;
+
+	std::vector<std::string> patientMHAs;
+	QDir dir(m_result->GetFolder());
+	dir.cdUp();
+	sublistFiles1(dir, "", patientMHAs);
+
+	int nrModals = 4;
+	// check accuracy
+	{
+		typedef itk::Image<double, 3> DoubleImageType;
+		cout << "OT: " << patientMHAs[nrModals].c_str() << endl;
+
+		typedef itk::Image< int, 3 >	IntImageType;
+		typedef itk::Image< double, 3 >	DoubleImageType;
+
+		cout << "1.0" << endl;
+
+		typedef itk::ImageFileReader<DoubleImageType> DoubleReaderType;
+		DoubleReaderType::Pointer DoubleReader = DoubleReaderType::New();
+		DoubleReader->SetFileName(patientMHAs[nrModals].c_str());	// ground_truth
+		DoubleReader->Update();
+		DoubleImageType::Pointer m_gtImage = dynamic_cast<DoubleImageType *>(DoubleReader->GetOutput());
+
+		cout << "1.1" << endl;
+
+		std::string output;
+		int nrOferrorOverall = 0, nrOfVoxelsOverall = 0;
+		LabelImageType* m_LabelImage = dynamic_cast<LabelImageType*>(m_result->GetLabelledImage().GetPointer());
+
+		cout << "1.2" << endl;
+
+		itk::ImageRegionIterator<LabelImageType> sampleIter(m_LabelImage, m_LabelImage->GetLargestPossibleRegion());
+		itk::ImageRegionIterator<DoubleImageType> gtIter(m_gtImage, m_gtImage->GetLargestPossibleRegion());
+		sampleIter.GoToBegin();
+		gtIter.GoToBegin();
+
+		cout << "1.3" << endl;
+
+		while (!gtIter.IsAtEnd())
+		{
+			if (gtIter.Get() != -1) {
+				if (gtIter.Get() != sampleIter.Get()) {
+					nrOferrorOverall++;
+				}
+				nrOfVoxelsOverall++;
+			}
+			++sampleIter;
+			++gtIter;
+		}
+
+		cout << "1.4" << endl;
+
+		double successRate = 100.0 - (nrOferrorOverall / (nrOfVoxelsOverall / 100.0));
+
+		cout << "1.5" << endl;
+
+		typedef itk::CastImageFilter< DoubleImageType, IntImageType > CastFilterType;
+		CastFilterType::Pointer castFilterGroundTruth = CastFilterType::New();
+		castFilterGroundTruth->SetInput(m_gtImage);
+
+		cout << "1.6" << endl;
+
+		typedef itk::LabelOverlapMeasuresImageFilter<LabelImageType> DiceType;
+		DiceType::Pointer DiceCompare = DiceType::New();
+		DiceCompare->SetSourceImage(m_LabelImage);
+		DiceCompare->SetTargetImage(castFilterGroundTruth->GetOutput());
+		DiceCompare->Update();
+
+		cout << "1.7" << endl;
+
+		double diceValue = DiceCompare->GetDiceCoefficient();
+
+		m_result->SetAttribute(m_objCountIdx + 2, successRate);
+		m_result->SetAttribute(m_objCountIdx + 3, diceValue);
+		m_result->SetAttribute(m_objCountIdx + 4, DiceCompare->GetDiceCoefficient(0));
+		m_result->SetAttribute(m_objCountIdx + 5, DiceCompare->GetDiceCoefficient(1));
+		m_result->SetAttribute(m_objCountIdx + 6, DiceCompare->GetDiceCoefficient(2));
+		m_result->SetAttribute(m_objCountIdx + 7, DiceCompare->GetDiceCoefficient(3));
+		m_result->SetAttribute(m_objCountIdx + 8, DiceCompare->GetDiceCoefficient(4));
+		m_result->SetAttribute(m_objCountIdx + 9, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 10, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 11, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 12, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 13, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 14, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 15, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 16, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 17, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 18, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 19, ((double)rand() / (double)RAND_MAX));
+
+		cout << "1.9" << endl;
+	}
 
 	/*
 	itk::ImageFileWriter<OutputImageType>::Pointer writer = itk::ImageFileWriter<OutputImageType>::New();

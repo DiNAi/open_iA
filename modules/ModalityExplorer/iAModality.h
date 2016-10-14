@@ -74,6 +74,7 @@ public:
 	QSharedPointer<iASpectralVoxelData const> GetData() const;
 
 	vtkSmartPointer<vtkImageData> GetImage() const;
+	void SetImage(vtkSmartPointer<vtkImageData>) const;
 
 	bool hasRenderFlag(RenderFlag flag) const;
 	int RenderFlags() const;

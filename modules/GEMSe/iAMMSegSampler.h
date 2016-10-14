@@ -33,6 +33,9 @@
 #include "iARandomWalker.h"
 #include "iASpectrumType.h"
 #include "SVMImageFilter.h"
+#include "iAConnector.h"
+#include <itkGPUGradientAnisotropicDiffusionImageFilter.h>
+#include <itkGradientAnisotropicDiffusionImageFilter.h>
 
 #include <random>
 #include <algorithm>
@@ -71,6 +74,9 @@ public:
 		QString const & characteristicsFile,
 		bool storeProbabilities);
 	QSharedPointer<iASamplingResults> GetResults();
+	double iAMMSegSampler::vecMed(std::vector<double> vec);
+	double iAMMSegSampler::vecMAD(std::vector<double> vec);
+	void GetUncertaintyValues(QString resultDir, QString groundTruthPath, std::vector< double > &uncert);
 	void run();
 	virtual double elapsed() const;
 	virtual double estimatedTimeRemaining() const;

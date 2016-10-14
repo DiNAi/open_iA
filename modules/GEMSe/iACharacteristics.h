@@ -25,6 +25,9 @@
 #include <QSharedPointer>
 #include <QThread>
 #include <time.h>
+#include <itkCastImageFilter.h>
+#include <itkLabelOverlapMeasuresImageFilter.h>
+#include <QDir>
 
 #include "iAGEMSeConstants.h"
 

@@ -124,6 +124,11 @@ vtkSmartPointer<vtkImageData> iAModality::GetImage() const
 	return m_imgData;
 }
 
+void iAModality::SetImage(vtkSmartPointer<vtkImageData> modImage) const
+{
+	m_imgData->DeepCopy(modImage);
+}
+
 bool iAModality::hasRenderFlag(RenderFlag loc) const
 {
 	return (renderFlags & loc) == loc;
