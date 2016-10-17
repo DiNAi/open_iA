@@ -74,15 +74,12 @@ public:
 		QString const & characteristicsFile,
 		bool storeProbabilities);
 	QSharedPointer<iASamplingResults> GetResults();
-	double iAMMSegSampler::vecMed(std::vector<double> vec);
-	double iAMMSegSampler::vecMAD(std::vector<double> vec);
-	void GetUncertaintyValues(QString resultDir, QString groundTruthPath, std::vector< double > &uncert);
 	void run();
 	virtual double elapsed() const;
 	virtual double estimatedTimeRemaining() const;
 	void Abort();
 	bool IsAborted();
-	SVMImageFilter::SeedsPointer MethodForSelectingSeeds(QString pathToPool, float percentageSeeds);
+	SVMImageFilter::SeedsPointer MethodForSelectingSeeds(QString pathToPool, float percentageSeeds, int id);
 signals:
 	void Progress(int);
 	void Status(QString const &);

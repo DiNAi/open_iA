@@ -65,6 +65,9 @@ class CharacteristicsCalculator : public QThread
 {
 public:
 	CharacteristicsCalculator(QSharedPointer<iASingleResult> result, QSharedPointer<iAAttributes> range, int objCountIdx);
+	void GetUncertaintyValues(QSharedPointer<iASingleResult> result, QString groundTruthPath, std::vector< double > &uncert);
+	double vecMed(std::vector<double> vec);
+	double vecMAD(std::vector<double> vec);
 private:
 	QSharedPointer<iASingleResult> m_result;
 	QSharedPointer<iAAttributes>   m_range;

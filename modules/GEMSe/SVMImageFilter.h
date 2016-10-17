@@ -46,6 +46,10 @@ public:
 		ModalitiesPointer modalities,
 		SeedsPointer seeds,
 		int channelCount); // TODO: replace by bool mask to allow selective enabling/disabling of channels
+	SVMImageFilter(double c, double gamma,
+		ModalitiesPointer modalities,
+		SeedsPointer seeds,
+		int channelCount, int gaditer, double gadstep, double gadcond); // TODO: replace by bool mask to allow selective enabling/disabling of channels
 	void Run();
 	ProbabilityImagesPointer GetResult();
 private:

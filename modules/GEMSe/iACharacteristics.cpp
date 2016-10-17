@@ -33,6 +33,40 @@
 
 #include <QString>
 
+/**
+* funcion vecMed
+*/
+double CharacteristicsCalculator::vecMed(std::vector<double> vec) {
+	if (vec.empty()) return 0;
+	else {
+		std::sort(vec.begin(), vec.end());
+		if (vec.size() % 2 == 0)
+			return (vec[vec.size() / 2 - 1] + vec[vec.size() / 2]) / 2;
+		else
+			return vec[vec.size() / 2];
+	}
+}
+
+/**
+* funcion vecMAD
+*/
+double CharacteristicsCalculator::vecMAD(std::vector<double> vec) {
+	if (vec.empty()) return 0;
+	else {
+		double median = vecMed(vec);
+		std::vector<double> MAD;
+		std::sort(vec.begin(), vec.end());
+
+		for (std::vector<double>::iterator it = vec.begin(); it != vec.end(); ++it)
+			MAD.push_back(fabs(*it - median));
+
+		if (MAD.size() % 2 == 0)
+			return (MAD[MAD.size() / 2 - 1] + MAD[MAD.size() / 2]) / 2;
+		else
+			return MAD[MAD.size() / 2];
+	}
+}
+
 void sublistFiles1(QDir directory, QString indent, std::vector<std::string> &allMHAs)
 {
 	indent += "\t";
@@ -152,6 +186,171 @@ m_result(result), m_range(range),
 m_objCountIdx(objCountIdx)
 {}
 
+void CharacteristicsCalculator::GetUncertaintyValues(QSharedPointer<iASingleResult> result, QString groundTruthPath, std::vector< double > &uncert)
+{
+	double limit = -std::log(1.0 / 5);
+	double normalizeFactor = 1 / limit;
+
+	typedef itk::Image< double, 3 >	DoubleImageType;
+	typedef itk::Image< int, 3 >	IntImageType;
+
+	typedef itk::ImageFileReader<DoubleImageType> DoubleReaderType;
+	typedef itk::ImageFileReader<IntImageType	> IntReaderType;
+
+	DoubleReaderType::Pointer readerGT = DoubleReaderType::New();
+	QString gtPath = QString::fromStdString(groundTruthPath.toStdString());
+	readerGT->SetFileName(gtPath.toStdString());
+	readerGT->Update();
+
+	std::vector< std::vector<int> > seeds;
+	//createSeedVector(seeds);
+
+	try
+	{
+		IntImageType::Pointer m_InputImage = dynamic_cast<IntImageType *>(result->GetLabelledImage().GetPointer());
+		DoubleImageType::Pointer m_InputImage0 = dynamic_cast<DoubleImageType *>(result->GetProbabilityImg(0).GetPointer());
+		DoubleImageType::Pointer m_InputImage1 = dynamic_cast<DoubleImageType *>(result->GetProbabilityImg(1).GetPointer());
+		DoubleImageType::Pointer m_InputImage2 = dynamic_cast<DoubleImageType *>(result->GetProbabilityImg(2).GetPointer());
+		DoubleImageType::Pointer m_InputImage3 = dynamic_cast<DoubleImageType *>(result->GetProbabilityImg(3).GetPointer());
+		DoubleImageType::Pointer m_InputImage4 = dynamic_cast<DoubleImageType *>(result->GetProbabilityImg(4).GetPointer());
+		DoubleImageType::Pointer m_InputGT = dynamic_cast<DoubleImageType *>(readerGT->GetOutput());
+
+		DoubleImageType::Pointer m_OutputImage;
+
+		m_OutputImage = DoubleImageType::New();
+		DoubleImageType::SpacingType m_ImgSpace = m_InputImage->GetSpacing();
+
+		// Initialize output image
+		m_OutputImage->SetSpacing(m_InputImage->GetSpacing());
+		m_OutputImage->SetOrigin(m_InputImage->GetOrigin());
+		m_OutputImage->SetRegions(m_InputImage->GetRequestedRegion());
+		m_OutputImage->Allocate();
+		m_OutputImage->FillBuffer(0.0);
+
+		//initiate image iterators
+		itk::ImageRegionIterator<IntImageType> inIter(m_InputImage, m_InputImage->GetLargestPossibleRegion());
+		itk::ImageRegionIterator<DoubleImageType> inIter0(m_InputImage0, m_InputImage0->GetLargestPossibleRegion());
+		itk::ImageRegionIterator<DoubleImageType> inIter1(m_InputImage1, m_InputImage1->GetLargestPossibleRegion());
+		itk::ImageRegionIterator<DoubleImageType> inIter2(m_InputImage2, m_InputImage2->GetLargestPossibleRegion());
+		itk::ImageRegionIterator<DoubleImageType> inIter3(m_InputImage3, m_InputImage3->GetLargestPossibleRegion());
+		itk::ImageRegionIterator<DoubleImageType> inIter4(m_InputImage4, m_InputImage4->GetLargestPossibleRegion());
+		itk::ImageRegionIterator<DoubleImageType> inIterGT(m_InputGT, m_InputGT->GetLargestPossibleRegion());
+		itk::ImageRegionIterator<DoubleImageType> outIter(m_OutputImage, m_OutputImage->GetLargestPossibleRegion());
+
+		inIter.GoToBegin();
+		inIter0.GoToBegin();
+		inIter1.GoToBegin();
+		inIter2.GoToBegin();
+		inIter3.GoToBegin();
+		inIter4.GoToBegin();
+		inIterGT.GoToBegin();
+		outIter.GoToBegin();
+		//outIterAll.GoToBegin();
+
+		int first100 = 0;
+
+		double min = 1.0;
+		double max = 0.0;
+		//std::cout << "Sample nr: " << i << endl;
+
+		std::vector<double> entropies;
+		std::vector<double> First_Minus_Second;
+
+		int nrOferror = 0; int nrOferror_l[5] = { 0 }; int nrOferror_c[5] = { 0 };
+		int nrOfSeedErrors = 0;
+		int nrOfVoxels = 0;
+		int nrOfSeeds = 0;
+
+		while (!inIter0.IsAtEnd())
+		{
+			double val0 = inIter0.Get(); double val1 = inIter1.Get(); double val2 = inIter2.Get(); double val3 = inIter3.Get(); double val4 = inIter4.Get();
+			double entropy = val0*std::log(val0) + val1*std::log(val1) + val2*std::log(val2) + val3*std::log(val3) + val4*std::log(val4);
+			entropy = (-entropy) * normalizeFactor;
+			outIter.Set(entropy);
+			//outIterAll.Set(entropy + outIterAll.Get());
+
+			std::vector<double> probs; probs.push_back(val0); probs.push_back(val1); probs.push_back(val2); probs.push_back(val3); probs.push_back(val4);
+			std::sort(probs.begin(), probs.end());
+			double FirstMinusSecond = probs[4] - probs[3];
+
+			if (entropy < min) {
+				min = entropy;
+			}
+
+			if (entropy > max) {
+				max = entropy;
+			}
+
+			entropies.push_back(entropy);
+			First_Minus_Second.push_back(FirstMinusSecond);
+
+			if (inIter.Get() != inIterGT.Get()) {
+				nrOferror++;
+				nrOferror_l[int(inIterGT.Get())]++; nrOferror_c[int(inIterGT.Get())]++;
+			}
+			else {
+				nrOferror_c[int(inIterGT.Get())]++;
+			}
+
+			++inIter;
+			++inIter0;
+			++inIter1;
+			++inIter2;
+			++inIter3;
+			++inIter4;
+			++inIterGT;
+			++outIter;
+			//++outIterAll;
+			nrOfVoxels++;
+		}
+
+		for (std::vector< std::vector<int> >::iterator it = seeds.begin(); it != seeds.end(); ++it) {
+			DoubleImageType::IndexType index;
+			std::vector<int> pts = *it;
+			index[0] = pts[0]; index[1] = pts[1]; index[2] = pts[2];
+
+			inIter.SetIndex(index);
+			inIterGT.SetIndex(index);
+
+			if (inIter.Get() != pts[3]) {
+				nrOfSeedErrors++;
+			}
+
+			nrOfSeeds++;
+		}
+
+		double mean = -1;
+		double sum = std::accumulate(entropies.begin(), entropies.end(), 0.0);
+		mean = sum / entropies.size();
+
+		std::vector<double> diff(entropies.size());
+		std::transform(entropies.begin(), entropies.end(), diff.begin(), std::bind2nd(std::minus<double>(), mean));
+		double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+		double stdev = std::sqrt(sq_sum / entropies.size());
+		double median = vecMed(entropies);
+		double MAD = vecMAD(entropies);
+
+		double successRate_l[5] = { 0.0 };
+		double accuracyGT = 100.0 - (nrOferror / (nrOfVoxels / 100.0));
+		double accuracySeeds = 100.0 - (nrOfSeedErrors / (nrOfSeeds / 100.0));
+
+		for (int j = 0; j < 5; j++) {
+			successRate_l[j] = 100.0 - (nrOferror_l[j] / (nrOferror_c[j] / 100.0));
+		}
+
+		std::cout << "Mean: " << mean << "Accuracy: " << accuracyGT / 100 << "Accuracy(Seeds): " << accuracySeeds / 100 << "Median: " << median << "Sigma: " << stdev << "MAD: " << MAD << "S0: " << successRate_l[0] << "S1: " << successRate_l[1] << "S2: " << successRate_l[2] << "S3: " << successRate_l[3] << "S4: " << successRate_l[4] << std::endl;
+
+		//x.push_back(mean);
+		//y.push_back(accuracyGT / 100);
+
+		cout << mean << ";" << accuracyGT / 100 << ";" << accuracySeeds / 100 << ";" << median << ";" << stdev << ";" << MAD << ";" << successRate_l[0] << ";" << successRate_l[1] << ";" << successRate_l[2] << ";" << successRate_l[3] << ";" << successRate_l[4] << std::endl;
+	}
+	catch (itk::ExceptionObject &err)
+	{
+		throw err;
+	}
+}
+
 
 void CharacteristicsCalculator::run()
 {
@@ -174,12 +373,9 @@ void CharacteristicsCalculator::run()
 	//relabel->SetSortByObjectSize(false);
 	relabel->Update();
 	int objCount = relabel->GetNumberOfObjects();
-	cout << "m_objCountIdx: " << m_objCountIdx << endl;
 	m_result->SetAttribute(m_objCountIdx, objCount);
 
 	srand(static_cast <unsigned> (time(0)));
-
-	cout << "GetFolder: " << m_result->GetFolder().toStdString() << endl;
 
 	std::vector<std::string> patientMHAs;
 	QDir dir(m_result->GetFolder());
@@ -190,12 +386,9 @@ void CharacteristicsCalculator::run()
 	// check accuracy
 	{
 		typedef itk::Image<double, 3> DoubleImageType;
-		cout << "OT: " << patientMHAs[nrModals].c_str() << endl;
 
 		typedef itk::Image< int, 3 >	IntImageType;
 		typedef itk::Image< double, 3 >	DoubleImageType;
-
-		cout << "1.0" << endl;
 
 		typedef itk::ImageFileReader<DoubleImageType> DoubleReaderType;
 		DoubleReaderType::Pointer DoubleReader = DoubleReaderType::New();
@@ -203,20 +396,14 @@ void CharacteristicsCalculator::run()
 		DoubleReader->Update();
 		DoubleImageType::Pointer m_gtImage = dynamic_cast<DoubleImageType *>(DoubleReader->GetOutput());
 
-		cout << "1.1" << endl;
-
 		std::string output;
 		int nrOferrorOverall = 0, nrOfVoxelsOverall = 0;
 		LabelImageType* m_LabelImage = dynamic_cast<LabelImageType*>(m_result->GetLabelledImage().GetPointer());
-
-		cout << "1.2" << endl;
 
 		itk::ImageRegionIterator<LabelImageType> sampleIter(m_LabelImage, m_LabelImage->GetLargestPossibleRegion());
 		itk::ImageRegionIterator<DoubleImageType> gtIter(m_gtImage, m_gtImage->GetLargestPossibleRegion());
 		sampleIter.GoToBegin();
 		gtIter.GoToBegin();
-
-		cout << "1.3" << endl;
 
 		while (!gtIter.IsAtEnd())
 		{
@@ -230,17 +417,11 @@ void CharacteristicsCalculator::run()
 			++gtIter;
 		}
 
-		cout << "1.4" << endl;
-
 		double successRate = 100.0 - (nrOferrorOverall / (nrOfVoxelsOverall / 100.0));
-
-		cout << "1.5" << endl;
 
 		typedef itk::CastImageFilter< DoubleImageType, IntImageType > CastFilterType;
 		CastFilterType::Pointer castFilterGroundTruth = CastFilterType::New();
 		castFilterGroundTruth->SetInput(m_gtImage);
-
-		cout << "1.6" << endl;
 
 		typedef itk::LabelOverlapMeasuresImageFilter<LabelImageType> DiceType;
 		DiceType::Pointer DiceCompare = DiceType::New();
@@ -248,18 +429,19 @@ void CharacteristicsCalculator::run()
 		DiceCompare->SetTargetImage(castFilterGroundTruth->GetOutput());
 		DiceCompare->Update();
 
-		cout << "1.7" << endl;
-
 		double diceValue = DiceCompare->GetDiceCoefficient();
 
+		std::vector< double > uncert(5);
+		GetUncertaintyValues(m_result, QString::fromStdString(patientMHAs[nrModals].c_str()), uncert);
+
 		m_result->SetAttribute(m_objCountIdx + 2, successRate);
-		m_result->SetAttribute(m_objCountIdx + 3, diceValue);
-		m_result->SetAttribute(m_objCountIdx + 4, DiceCompare->GetDiceCoefficient(0));
-		m_result->SetAttribute(m_objCountIdx + 5, DiceCompare->GetDiceCoefficient(1));
-		m_result->SetAttribute(m_objCountIdx + 6, DiceCompare->GetDiceCoefficient(2));
-		m_result->SetAttribute(m_objCountIdx + 7, DiceCompare->GetDiceCoefficient(3));
-		m_result->SetAttribute(m_objCountIdx + 8, DiceCompare->GetDiceCoefficient(4));
-		m_result->SetAttribute(m_objCountIdx + 9, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 3, successRate);
+		m_result->SetAttribute(m_objCountIdx + 4, diceValue);
+		m_result->SetAttribute(m_objCountIdx + 5, DiceCompare->GetDiceCoefficient(0));
+		m_result->SetAttribute(m_objCountIdx + 6, DiceCompare->GetDiceCoefficient(1));
+		m_result->SetAttribute(m_objCountIdx + 7, DiceCompare->GetDiceCoefficient(2));
+		m_result->SetAttribute(m_objCountIdx + 8, DiceCompare->GetDiceCoefficient(3));
+		m_result->SetAttribute(m_objCountIdx + 9, DiceCompare->GetDiceCoefficient(4));
 		m_result->SetAttribute(m_objCountIdx + 10, ((double)rand() / (double)RAND_MAX));
 		m_result->SetAttribute(m_objCountIdx + 11, ((double)rand() / (double)RAND_MAX));
 		m_result->SetAttribute(m_objCountIdx + 12, ((double)rand() / (double)RAND_MAX));
@@ -270,8 +452,6 @@ void CharacteristicsCalculator::run()
 		m_result->SetAttribute(m_objCountIdx + 17, ((double)rand() / (double)RAND_MAX));
 		m_result->SetAttribute(m_objCountIdx + 18, ((double)rand() / (double)RAND_MAX));
 		m_result->SetAttribute(m_objCountIdx + 19, ((double)rand() / (double)RAND_MAX));
-
-		cout << "1.9" << endl;
 	}
 
 	/*

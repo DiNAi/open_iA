@@ -28,6 +28,8 @@
 #include "iAModality.h"
 #include "iAVtkDraw.h"
 #include "svm.h"
+#include <itkGradientAnisotropicDiffusionImageFilter.h>
+#include <iAConnector.h>
 
 SVMImageFilter::SVMImageFilter(double c, double gamma,
 	ModalitiesPointer modalities,
@@ -40,7 +42,40 @@ SVMImageFilter::SVMImageFilter(double c, double gamma,
 	m_channelCount(channelCount),
 	m_probabilities(new ProbabilityImagesType)
 {
-	
+}
+
+SVMImageFilter::SVMImageFilter(double c, double gamma,
+	ModalitiesPointer modalities,
+	SeedsPointer seeds,
+	int channelCount, int gaditer, double gadstep, double gadcond) :
+	m_c(c),
+	m_gamma(gamma),
+	m_modalities(modalities),
+	m_seeds(seeds),
+	m_channelCount(channelCount),
+	m_probabilities(new ProbabilityImagesType)
+{
+	typedef itk::Image< double, 3 > InputImageType;
+
+	for (int iM = 0; iM < m_modalities->size(); iM++) {
+
+		iAConnector* m_conn = new iAConnector;
+		m_conn->SetImage(m_modalities->Get(iM)->GetImage());
+
+		typedef itk::GradientAnisotropicDiffusionImageFilter< InputImageType, InputImageType > GGADIFType;
+		typename GGADIFType::Pointer filter = GGADIFType::New();
+
+		filter->SetNumberOfIterations(gaditer);
+		filter->SetTimeStep(gadstep);
+		filter->SetConductanceParameter(gadcond);
+		filter->SetInput(dynamic_cast< InputImageType * >(m_conn->GetITKImage()));
+
+		filter->Update();
+		m_conn->SetImage(filter->GetOutput());
+		m_modalities->Get(iM)->SetImage(m_conn->GetVTKImage());
+		m_modalities->Get(iM)->GetImage()->Modified();
+		filter->ReleaseDataFlagOn();
+	}
 }
 
 void myNullPrintFunc(char const *)

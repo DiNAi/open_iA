@@ -59,40 +59,6 @@ void sublistFiles2(QDir directory, QString indent, std::vector<std::string> &all
 	}
 }
 
-/**
-* funcion vecMed
-*/
-double iAMMSegSampler::vecMed(std::vector<double> vec) {
-	if (vec.empty()) return 0;
-	else {
-		std::sort(vec.begin(), vec.end());
-		if (vec.size() % 2 == 0)
-			return (vec[vec.size() / 2 - 1] + vec[vec.size() / 2]) / 2;
-		else
-			return vec[vec.size() / 2];
-	}
-}
-
-/**
-* funcion vecMAD
-*/
-double iAMMSegSampler::vecMAD(std::vector<double> vec) {
-	if (vec.empty()) return 0;
-	else {
-		double median = vecMed(vec);
-		std::vector<double> MAD;
-		std::sort(vec.begin(), vec.end());
-
-		for (std::vector<double>::iterator it = vec.begin(); it != vec.end(); ++it)
-			MAD.push_back(fabs(*it - median));
-
-		if (MAD.size() % 2 == 0)
-			return (MAD[MAD.size() / 2 - 1] + MAD[MAD.size() / 2]) / 2;
-		else
-			return MAD[MAD.size() / 2];
-	}
-}
-
 void listFiles(QDir directory, QString indent, std::vector<std::string> &allMHAs)
 {
 	indent += "\t";
@@ -146,201 +112,6 @@ void iAMMSegSampler::StatusMsg(QString const & msg)
 {
 	emit Status(msg);
 	DEBUG_LOG(msg+"\n");
-}
-
-void iAMMSegSampler::GetUncertaintyValues(QString resultDir, QString groundTruthPath, std::vector< double > &uncert)
-{
-	double limit = -std::log(1.0 / 4);
-	double normalizeFactor = 1 / limit;
-
-	typedef itk::Image< double, 3 >	DoubleImageType;
-	typedef itk::ImageFileReader<DoubleImageType> DoubleReaderType;
-
-	DoubleReaderType::Pointer reader = DoubleReaderType::New();
-	DoubleReaderType::Pointer reader0 = DoubleReaderType::New();
-	DoubleReaderType::Pointer reader1 = DoubleReaderType::New();
-	DoubleReaderType::Pointer reader2 = DoubleReaderType::New();
-	DoubleReaderType::Pointer reader3 = DoubleReaderType::New();
-	DoubleReaderType::Pointer readerGT = DoubleReaderType::New();
-
-	QString temp = resultDir + "\\label.mhd";
-	QString temp0 = resultDir + "\\prob0.mhd";
-	QString temp1 = resultDir + "\\prob1.mhd";
-	QString temp2 = resultDir + "\\prob2.mhd";
-	QString temp3 = resultDir + "\\prob3.mhd";
-	QString entPath = resultDir + "\\firstsecond.mhd";
-	QString gtPath = QString::fromStdString(groundTruthPath.toStdString());
-
-	reader->SetFileName(temp.toStdString());
-	reader0->SetFileName(temp0.toStdString());
-	reader1->SetFileName(temp1.toStdString());
-	reader2->SetFileName(temp2.toStdString());
-	reader3->SetFileName(temp3.toStdString());
-	readerGT->SetFileName(gtPath.toStdString());
-
-	reader->Update();
-	reader0->Update();
-	reader1->Update();
-	reader2->Update();
-	reader3->Update();
-	readerGT->Update();
-
-	std::vector< std::vector<int> > seeds;
-	//createSeedVector(seeds);
-
-	try
-	{
-		DoubleImageType::Pointer m_InputImage = dynamic_cast<DoubleImageType *>(reader->GetOutput());
-		DoubleImageType::Pointer m_InputImage0 = dynamic_cast<DoubleImageType *>(reader0->GetOutput());
-		DoubleImageType::Pointer m_InputImage1 = dynamic_cast<DoubleImageType *>(reader1->GetOutput());
-		DoubleImageType::Pointer m_InputImage2 = dynamic_cast<DoubleImageType *>(reader2->GetOutput());
-		DoubleImageType::Pointer m_InputImage3 = dynamic_cast<DoubleImageType *>(reader3->GetOutput());
-		DoubleImageType::Pointer m_InputGT = dynamic_cast<DoubleImageType *>(readerGT->GetOutput());
-
-		DoubleImageType::Pointer m_OutputImage;
-
-		m_OutputImage = DoubleImageType::New();
-		DoubleImageType::SpacingType m_ImgSpace = m_InputImage->GetSpacing();
-
-		// Initialize output image
-		m_OutputImage->SetSpacing(m_InputImage->GetSpacing());
-		m_OutputImage->SetOrigin(m_InputImage->GetOrigin());
-		m_OutputImage->SetRegions(m_InputImage->GetRequestedRegion());
-		m_OutputImage->Allocate();
-		m_OutputImage->FillBuffer(0.0);
-
-		//initiate image iterators
-		itk::ImageRegionIterator<DoubleImageType> inIter(m_InputImage, m_InputImage->GetLargestPossibleRegion());
-		itk::ImageRegionIterator<DoubleImageType> inIter0(m_InputImage0, m_InputImage0->GetLargestPossibleRegion());
-		itk::ImageRegionIterator<DoubleImageType> inIter1(m_InputImage1, m_InputImage1->GetLargestPossibleRegion());
-		itk::ImageRegionIterator<DoubleImageType> inIter2(m_InputImage2, m_InputImage2->GetLargestPossibleRegion());
-		itk::ImageRegionIterator<DoubleImageType> inIter3(m_InputImage3, m_InputImage3->GetLargestPossibleRegion());
-		itk::ImageRegionIterator<DoubleImageType> inIterGT(m_InputGT, m_InputGT->GetLargestPossibleRegion());
-		itk::ImageRegionIterator<DoubleImageType> outIter(m_OutputImage, m_OutputImage->GetLargestPossibleRegion());
-
-		inIter.GoToBegin();
-		inIter0.GoToBegin();
-		inIter1.GoToBegin();
-		inIter2.GoToBegin();
-		inIter3.GoToBegin();
-		inIterGT.GoToBegin();
-		outIter.GoToBegin();
-		//outIterAll.GoToBegin();
-
-		int first100 = 0;
-
-		double min = 1.0;
-		double max = 0.0;
-		//std::cout << "Sample nr: " << i << endl;
-
-		std::vector<double> entropies;
-		std::vector<double> First_Minus_Second;
-
-		int nrOferror = 0; int nrOferror_l[4] = { 0 }; int nrOferror_c[4] = { 0 };
-		int nrOfSeedErrors = 0;
-		int nrOfVoxels = 0;
-		int nrOfSeeds = 0;
-
-		while (!inIter0.IsAtEnd())
-		{
-			double val0 = inIter0.Get(); double val1 = inIter1.Get(); double val2 = inIter2.Get(); double val3 = inIter3.Get();
-			double entropy = val0*std::log(val0) + val1*std::log(val1) + val2*std::log(val2) + val3*std::log(val3);
-			entropy = (-entropy) * normalizeFactor;
-			outIter.Set(entropy);
-			//outIterAll.Set(entropy + outIterAll.Get());
-
-			std::vector<double> probs; probs.push_back(val0); probs.push_back(val1); probs.push_back(val2); probs.push_back(val3);
-			std::sort(probs.begin(), probs.end());
-			double FirstMinusSecond = probs[3] - probs[2];
-
-			if (entropy < min) {
-				min = entropy;
-			}
-
-			if (entropy > max) {
-				max = entropy;
-			}
-
-			entropies.push_back(entropy);
-			First_Minus_Second.push_back(FirstMinusSecond);
-
-			if (inIter.Get() != inIterGT.Get()) {
-				nrOferror++;
-				nrOferror_l[int(inIterGT.Get())]++; nrOferror_c[int(inIterGT.Get())]++;
-			}
-			else {
-				nrOferror_c[int(inIterGT.Get())]++;
-			}
-
-			++inIter;
-			++inIter0;
-			++inIter1;
-			++inIter2;
-			++inIter3;
-			++inIterGT;
-			++outIter;
-			//++outIterAll;
-			nrOfVoxels++;
-		}
-
-		for (std::vector< std::vector<int> >::iterator it = seeds.begin(); it != seeds.end(); ++it) {
-			DoubleImageType::IndexType index;
-			std::vector<int> pts = *it;
-			index[0] = pts[0]; index[1] = pts[1]; index[2] = pts[2];
-
-			inIter.SetIndex(index);
-			inIterGT.SetIndex(index);
-
-			if (inIter.Get() != pts[3]) {
-				nrOfSeedErrors++;
-			}
-
-			nrOfSeeds++;
-		}
-
-		double mean = -1;
-		double sum = std::accumulate(entropies.begin(), entropies.end(), 0.0);
-		mean = sum / entropies.size();
-
-		std::vector<double> diff(entropies.size());
-		std::transform(entropies.begin(), entropies.end(), diff.begin(), std::bind2nd(std::minus<double>(), mean));
-		double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-		double stdev = std::sqrt(sq_sum / entropies.size());
-		double median = vecMed(entropies);
-		double MAD = vecMAD(entropies);
-
-		double successRate_l[4] = { 0.0 };
-		double accuracyGT = 100.0 - (nrOferror / (nrOfVoxels / 100.0));
-		double accuracySeeds = 100.0 - (nrOfSeedErrors / (nrOfSeeds / 100.0));
-
-		for (int j = 0; j < 4; j++) {
-			successRate_l[j] = 100.0 - (nrOferror_l[j] / (nrOferror_c[j] / 100.0));
-		}
-
-		std::cout << "Mean: " << mean << "Accuracy: " << accuracyGT / 100 << "Accuracy(Seeds): " << accuracySeeds / 100 << "Median: " << median << "Sigma: " << stdev << "MAD: " << MAD << "S0: " << successRate_l[0] << "S1: " << successRate_l[1] << "S2: " << successRate_l[2] << "S3: " << successRate_l[3] << std::endl;
-
-		//x.push_back(mean);
-		//y.push_back(accuracyGT / 100);
-
-		cout << mean << ";" << accuracyGT / 100 << ";" << accuracySeeds / 100 << ";" << median << ";" << stdev << ";" << MAD << ";" << successRate_l[0] << ";" << successRate_l[1] << ";" << successRate_l[2] << ";" << successRate_l[3] << std::endl;
-
-		//DoubleWriterType::Pointer writer = DoubleWriterType::New();
-		//writer->ReleaseDataFlagOn();
-		//writer->SetFileName(entPath.toStdString());
-		//writer->SetInput(m_OutputImage);
-		//writer->SetUseCompression(true);
-		//writer->Update();
-
-		//if (i == nrSegmen - 1){
-		//	//set output image as the process output
-		//	image->SetImage(m_OutputImage);
-		//	image->Modified();
-		//}
-	}
-	catch (itk::ExceptionObject &err)
-	{
-		throw err;
-	}
 }
 
 
@@ -461,25 +232,6 @@ void iAMMSegSampler::run()
 
 		typedef itk::Image< double, 3 > InputImageType;
 
-		for (int iM = 0; iM < m_modalities->size(); iM++) {
-			iAConnector* m_conn = new iAConnector;
-			m_conn->SetImage(m_modalities->Get(iM)->GetImage());
-
-			typedef itk::GradientAnisotropicDiffusionImageFilter< InputImageType, InputImageType > GGADIFType;
-			typename GGADIFType::Pointer filter = GGADIFType::New();
-
-			filter->SetNumberOfIterations(param->gaditer());
-			filter->SetTimeStep(param->gadstep());
-			filter->SetConductanceParameter(param->gadcond());
-			filter->SetInput(dynamic_cast< InputImageType * >(m_conn->GetITKImage()));
-
-			filter->Update();
-			m_conn->SetImage(filter->GetOutput());
-			m_modalities->Get(iM)->SetImage(m_conn->GetVTKImage());
-			m_modalities->Get(iM)->GetImage()->Modified();
-			filter->ReleaseDataFlagOn();
-		}
-
 		while (m_runningERW.size() >= CONCURRENT_ERW_RUNS && !m_aborted)
 		{
 			QThread::msleep(100);
@@ -492,18 +244,25 @@ void iAMMSegSampler::run()
 		iAPerformanceTimer svmPerfTimer;
 		svmPerfTimer.start();
 
+		//SVMImageFilter svm(
+		//	param->svm_c(),
+		//	param->svm_gamma(),
+		//	m_modalities,
+		//	m_seeds,
+		//	param->svm_channels());
+
 		SVMImageFilter svm(
 			param->svm_c(),
 			param->svm_gamma(),
 			m_modalities,
-			m_seeds,
-			param->svm_channels());
+			MethodForSelectingSeeds(m_outputBaseDir, param->svm_seedprob(), param->id()),//m_seeds,
+			param->svm_channels(), param->gaditer(), param->gadstep(), param->gadcond());
+
 		svm.Run();
 
 		double svmTime = svmPerfTimer.elapsed();
 		m_calcERWDuration += svmTime;
-		
-		
+
 		StatusMsg(QString("SVM finished in %1 seconds; starting ERW Run %2")
 			.arg(QString::number(svmTime))
 			.arg(QString::number(m_curLoop)));
@@ -526,7 +285,7 @@ void iAMMSegSampler::run()
 
 		QSharedPointer<iAGaussianNormalizer> gauss(new iAGaussianNormalizer);
 		gauss->SetBeta(param->erw_beta());
-			
+		
 		QSharedPointer<QVector<iARWInputChannel> > inputChannels(new QVector<iARWInputChannel>());
 		for (int i=0; i<param->modalityCount(); ++i)
 		{
@@ -568,11 +327,7 @@ void iAMMSegSampler::run()
 		m_mutex.unlock();
 		extendedRandomWalker->start();
 
-		cout << "m_outputBaseDir: " << m_outputBaseDir.toStdString() << endl;
-
 		QString resultDir = m_outputBaseDir + "/sample" + QString::number(param->id());
-
-		std::vector< double > uncert;
 
 		std::vector<std::string> patientMHAs;
 		QDir dir(m_outputBaseDir);
@@ -580,8 +335,6 @@ void iAMMSegSampler::run()
 		sublistFiles2(dir, "", patientMHAs);
 
 		int nrModals = 4;
-
-		GetUncertaintyValues(m_outputBaseDir, QString::fromStdString(patientMHAs[nrModals].c_str()), uncert);
 		// use threadpool:
 		//QThreadPool::globalInstance()->start(extendedRandomWalker);
 	}
@@ -775,7 +528,7 @@ bool iAMMSegSampler::IsAborted()
 	return m_aborted;
 }
 
-SVMImageFilter::SeedsPointer iAMMSegSampler::MethodForSelectingSeeds(QString pathToPool, float percentageSeeds) {
+SVMImageFilter::SeedsPointer iAMMSegSampler::MethodForSelectingSeeds(QString pathToPool, float percentageSeeds, int id) {
 	SVMImageFilter::SeedsPointer seeds(new SVMImageFilter::SeedsType);
 	std::vector<std::string> allMHAs;
 	typedef itk::Image< double, 3 > InputImageType;
@@ -784,8 +537,6 @@ SVMImageFilter::SeedsPointer iAMMSegSampler::MethodForSelectingSeeds(QString pat
 		QDir dir(pathToPool);
 		listFiles(dir, "", allMHAs);
 	}
-
-	cout << "nr of mhas: " << allMHAs.size() << endl;
 
 	/* code snippet to select seeds */
 	{
@@ -831,10 +582,13 @@ SVMImageFilter::SeedsPointer iAMMSegSampler::MethodForSelectingSeeds(QString pat
 				saltpepper->SetInput(otImage);
 				saltpepper->Update();
 
+				QString resultDir = m_outputBaseDir + "/sample" + QString::number(id);
+
 				std::size_t found = curStr.find_last_of("//");
 				found = curStr.substr(0, found).find_last_of("//");
 				std::string pathStr(curStr.substr(0, found).substr(0, found));
-				seedpathStr = pathStr + "/seeds.seed";
+				//seedpathStr = resultDir.toStdString() + "/seeds.seed";
+				seedpathStr = m_outputBaseDir.toStdString() + "/seeds_id_" + QString::number(id).toStdString() + ".seed";
 
 				std::vector<std::vector<int>> labels[5];
 
@@ -861,7 +615,6 @@ SVMImageFilter::SeedsPointer iAMMSegSampler::MethodForSelectingSeeds(QString pat
 					++imageIterator2;
 				}
 
-				cout << "Prob: " << curProb << "-";
 				float percentages[5];
 				for (int i = 0; i < 5; i++) { percentages[i] = float(labels[i].size()) / (float(counter[i]) / 100); cout << percentages[i] << ","; }
 				cout << endl;
@@ -870,6 +623,7 @@ SVMImageFilter::SeedsPointer iAMMSegSampler::MethodForSelectingSeeds(QString pat
 				if (labels[0].size() > 0 && labels[1].size() > 0 && labels[2].size() > 0 && labels[3].size() > 0 && labels[4].size() > 0) {
 					safe = true;
 
+					//QDir sampleFolder(resultDir); sampleFolder.mkdir(resultDir);
 					ofstream myfile;
 					myfile.open(seedpathStr);
 					myfile << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
@@ -935,7 +689,6 @@ SVMImageFilter::SeedsPointer iAMMSegSampler::MethodForSelectingSeeds(QString pat
 					}
 					myfile << "\t</Label>" << endl;
 					myfile << "</Labels>" << endl;
-					cout << "Next ...." << endl;
 					myfile.close();
 
 					seeds->push_back(result0);
@@ -945,8 +698,6 @@ SVMImageFilter::SeedsPointer iAMMSegSampler::MethodForSelectingSeeds(QString pat
 					seeds->push_back(result4);
 				}
 			}
-
-			cout << "Seed file: " << seedpathStr << " Prob: " << curProb << endl;
 		}
 	}
 

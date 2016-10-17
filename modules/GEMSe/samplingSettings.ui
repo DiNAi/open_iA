@@ -110,7 +110,7 @@
    <item row="0" column="2" colspan="2">
     <widget class="QLineEdit" name="leOutputFolder">
      <property name="text">
-      <string>D:/sampling</string>
+      <string>D:/sampling/brats_2013_pat0006_1</string>
      </property>
     </widget>
    </item>
@@ -130,7 +130,7 @@
       <number>10</number>
      </property>
      <property name="value">
-      <number>100</number>
+      <number>50</number>
      </property>
     </widget>
    </item>
@@ -362,7 +362,7 @@
    <item row="23" column="2">
     <widget class="QLineEdit" name="leGAD_Iter_From">
      <property name="text">
-      <string>1</string>
+      <string>0</string>
      </property>
     </widget>
    </item>
@@ -383,7 +383,7 @@
    <item row="12" column="3">
     <widget class="QLineEdit" name="leSVM_SeedSetProb_To">
      <property name="text">
-      <string>25</string>
+      <string>5</string>
      </property>
     </widget>
    </item>
@@ -397,14 +397,14 @@
    <item row="24" column="3">
     <widget class="QLineEdit" name="leGAD_Step_To">
      <property name="text">
-      <string>3.125</string>
+      <string>0.0625</string>
      </property>
     </widget>
    </item>
    <item row="25" column="3">
     <widget class="QLineEdit" name="leGAD_Cond_To">
      <property name="text">
-      <string>4</string>
+      <string>8</string>
      </property>
     </widget>
    </item>

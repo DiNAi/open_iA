@@ -144,8 +144,6 @@ void dlg_GEMSeControl::StartSampling()
 		m_outputFolder = m_dlgSamplingSettings->GetOutputFolder();
 		QDir outputFolder(m_outputFolder);
 		outputFolder.mkpath(".");
-
-		cout << "wie oft !  " << endl;
 		
 		m_sampler = QSharedPointer<iAMMSegSampler>(new iAMMSegSampler(
 			m_dlgModalities->GetModalities(),
