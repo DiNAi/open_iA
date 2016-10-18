@@ -342,7 +342,7 @@ void CharacteristicsCalculator::GetUncertaintyValues(QSharedPointer<iASingleResu
 
 		//x.push_back(mean);
 		//y.push_back(accuracyGT / 100);
-
+		ucert[0] = median; ucert[0] = MAD;
 		cout << mean << ";" << accuracyGT / 100 << ";" << accuracySeeds / 100 << ";" << median << ";" << stdev << ";" << MAD << ";" << successRate_l[0] << ";" << successRate_l[1] << ";" << successRate_l[2] << ";" << successRate_l[3] << ";" << successRate_l[4] << std::endl;
 	}
 	catch (itk::ExceptionObject &err)
@@ -442,8 +442,8 @@ void CharacteristicsCalculator::run()
 		m_result->SetAttribute(m_objCountIdx + 7, DiceCompare->GetDiceCoefficient(2));
 		m_result->SetAttribute(m_objCountIdx + 8, DiceCompare->GetDiceCoefficient(3));
 		m_result->SetAttribute(m_objCountIdx + 9, DiceCompare->GetDiceCoefficient(4));
-		m_result->SetAttribute(m_objCountIdx + 10, ((double)rand() / (double)RAND_MAX));
-		m_result->SetAttribute(m_objCountIdx + 11, ((double)rand() / (double)RAND_MAX));
+		m_result->SetAttribute(m_objCountIdx + 10, uncert[0]);
+		m_result->SetAttribute(m_objCountIdx + 11, uncert[1]);
 		m_result->SetAttribute(m_objCountIdx + 12, ((double)rand() / (double)RAND_MAX));
 		m_result->SetAttribute(m_objCountIdx + 13, ((double)rand() / (double)RAND_MAX));
 		m_result->SetAttribute(m_objCountIdx + 14, ((double)rand() / (double)RAND_MAX));
